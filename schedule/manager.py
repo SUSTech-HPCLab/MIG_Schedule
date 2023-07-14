@@ -139,6 +139,10 @@ class manager:
 
             client_socket.sendall(cmd.encode())
             response = client_socket.recv(1024).decode()
+
+            if response != 'okk':
+                GL_ID = response
+
             uuid_list = util.get_uuid(value.ip, 22222, value.GPU_ID, value.MIG_Instace)
             uuid_Existence = state_table.keys()
 
@@ -147,7 +151,7 @@ class manager:
                 if i in uuid_Existence:
                     continue
                 else:
-                    table_item = table_value(ip=value.ip, port=value.port, GPU_ID=value.GPU_ID, GI_ID=0, MIG_config=value.MIG_Instace)
+                    table_item = table_value(ip=value.ip, port=value.port, GPU_ID=value.GPU_ID, GI_ID=GL_ID, MIG_config=value.MIG_Instace)
                     state_table[i] =  table_item  
 
                     value.MIG_UUID = i

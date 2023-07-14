@@ -53,6 +53,18 @@ def get_uuid(ip, port, GPU_ID, MIG_Instace):
     return uuid_list
 
 
+def get_GI_ID(input):
+    pattern = r"GPU instance ID\s*(\d+)"
+    match = re.search(pattern, input)
+    if match:
+        gpu_instance_id = match.group(1)
+        return gpu_instance_id
+    else:
+        return None
+    
+
+
+
 def create_instance(config, ip=0, GPU=0):
     CI = MIG_instance_map.get(config)
     result = execute_command("sudo nvidia-smi mig -i " + str(GPU) + " -cgi "   + str(CI) + " -C")

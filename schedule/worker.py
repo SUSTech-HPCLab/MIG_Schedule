@@ -4,6 +4,7 @@ import threading
 import subprocess
 import re
 import os
+import util
 class Worker:
     def __init__(self, port):
         self.port = port
@@ -33,9 +34,17 @@ class Worker:
 
                     data = client_socket.recv(1024)
                     received_message = data.decode()
-                    print(received_message)
-                    os.system(received_message)
-                    response_message = 'okk'
+
+                    
+                    result = subprocess.check_output(received_message, shell=True)
+                    result = result.decode().strip()
+                    GI_ID = util.get_GI_ID(result)
+                    if GI_ID:
+                        result = GI_ID
+                    else:
+                        result = 'okk'
+                    response_message = result
+
                     client_socket.sendall(response_message.encode())
             
 
