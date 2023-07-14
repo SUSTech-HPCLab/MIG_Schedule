@@ -23,14 +23,17 @@ class Worker:
             client_socket, client_address = server_socket.accept()
             while True:
                 data = client_socket.recv(1024)
+                if not data:
+                    print(f"Client {client_address[0]}:{client_address[1]} disconnected.")
+                    break
                 received_message = data.decode()
-
                 if received_message == 'config':
                     response_message = 'okk'
                     client_socket.sendall(response_message.encode())
 
                     data = client_socket.recv(1024)
                     received_message = data.decode()
+                    print(received_message)
                     os.system(received_message)
                     response_message = 'okk'
                     client_socket.sendall(response_message.encode())
@@ -50,8 +53,9 @@ class Worker:
                         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         server_address = ('172.18.36.119', 11111)
                         client_socket.connect(server_address)
+
                         cuda_visible_devices = command.split('CUDA_VISIBLE_DEVICES=')[1].split()[0]
-                        state_change = f'{cuda_visible_devices} idel'
+                        state_change = f'{cuda_visible_devices},{command}'
 
                         client_socket.sendall(state_change.encode())
                         client_socket.close()
@@ -63,9 +67,10 @@ class Worker:
                     response_message = 'okk'
                     client_socket.sendall(response_message.encode())
 
-
-                if response_message == 'finish':
-                    server_socket.close()
+                # if response_message == 'finish':
+                   
+                #     client_socket.close()
+                #     break
 
 
     def return_uuid(self, server_port=22222):

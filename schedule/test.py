@@ -1,21 +1,22 @@
-import socket
 
-# def communicate_with_server(server_ip, server_port, message):
-#     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+from manager import manager
+from manager import message
+from util import *
+table_item = table_value(ip='172.18.36.131', port=12345, GPU_ID=0, GI_ID=3, MIG_config='2g.20gb')
+destory_instance(table_item)
+table_item = table_value(ip='172.18.36.131', port=12345, GPU_ID=0, GI_ID=4, MIG_config='2g.20gb')
+destory_instance(table_item)
 
-#     server_address = (server_ip, server_port)
-#     client_socket.connect(server_address)
+# test = manager(None, 12345)
 
-#     client_socket.sendall(message.encode())
+# key = message('/home/zbw/MIG/schedule,Abacus,python test_program.py')
+# value = config(ip='172.18.36.131', port=12345, GPU_ID=0, MIG_Instace='2g.20gb', Existence=True, MIG_UUID="MIG-e1a6d5d7-52af-5b1d-a897-ce0f71007d15")
+# test.state_table()
 
-#     client_socket.close()
 
-# server_ip = '0.0.0.0'  # 服务器的IP地址
-# server_port = 12345  # 服务器的端口
-# message = "Hello, server!"
 
-# communicate_with_server(server_ip, server_port, message)
+# test.do_shecudle(key, value)
 
-input = "cd test && CUDA_VISIBLE_DEVICES=MIG-32522c13-1a59-5776-9d30-e0ae7b6a4874  conda run -n test test"
-cuda_visible_devices = input.split('CUDA_VISIBLE_DEVICES=')[1].split()[0]
-print(cuda_visible_devices)
+# value = config(ip='172.18.36.131', port=12345, GPU_ID=0, MIG_Instace='2g.20gb', Existence=True, MIG_UUID="MIG-47166aa1-8a66-5cba-a964-8dbcf1697934")
+
+# test.do_shecudle(key, value)
