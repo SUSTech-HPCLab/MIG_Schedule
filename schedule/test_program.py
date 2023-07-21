@@ -12,3 +12,4 @@ torch.cuda.synchronize()
 with torch.no_grad():
     for i in range(0, 100):
         output= model(input).cpu()
+        

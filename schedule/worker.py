@@ -41,8 +41,6 @@ class Worker:
                     GI_ID = util.get_GI_ID(result)
                     if GI_ID:
                         result = GI_ID
-                    else:
-                        result = 'okk'
                     response_message = result
 
                     client_socket.sendall(response_message.encode())
