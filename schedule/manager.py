@@ -113,12 +113,7 @@ class manager:
         UUID = None
         # MIG配置
         if value.Use_MIG:
-            if value.Existence:
-                state_table['MIG-e1a6d5d7-52af-5b1d-a897-ce0f71007d15']  = table_value(ip='172.18.36.131', port=12345, GPU_ID=0, GI_ID=0, MIG_config='2g.20gb')
-                state_table['MIG-47166aa1-8a66-5cba-a964-8dbcf1697934']  = table_value(ip='172.18.36.131', port=12345, GPU_ID=0, GI_ID=0, MIG_config='2g.20gb')
-                a = 1
-                
-            else:
+            if not value.Existence:
                 client_socket.sendall(cmd_type.encode())
                 response = client_socket.recv(1024).decode()
                 CI = util.MIG_instance_map.get(value.MIG_Instace)
@@ -140,7 +135,7 @@ class manager:
                         table_item = table_value(ip=value.ip, port=value.port, GPU_ID=value.GPU_ID, GI_ID=GI_ID, MIG_config=value.MIG_Instace)
                         state_table[i] =  table_item  
 
-                        value.MIG_UUID = i         
+                        value.MIG_UUID = i        
 
         # MPS配置
         if value.Use_MPS:

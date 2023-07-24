@@ -38,6 +38,7 @@ class Worker:
                     
                     result = subprocess.check_output(received_message, shell=True)
                     result = result.decode().strip()
+                    print(result)
                     GI_ID = util.get_GI_ID(result)
                     if GI_ID:
                         result = GI_ID
