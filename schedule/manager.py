@@ -138,6 +138,7 @@ class manager:
                         value.MIG_UUID = i        
 
         # MPS配置
+        print("MIG config successfully")
         if value.Use_MPS:
                 if value.Open_MPS:
                     client_socket.sendall(cmd_type.encode())
@@ -151,7 +152,7 @@ class manager:
 
                     client_socket.sendall(cmd_type.encode())
                     response = client_socket.recv(1024).decode()
-                    cmd = f'echo set_active_thread_percentage {mps_server_pid} {value.MPS_Percentage} | sudo -E nvidia-cuda-mps-control'
+                    cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={value.MIG_UUID} && echo set_active_thread_percentage {mps_server_pid} {value.MPS_Percentage} | sudo -E nvidia-cuda-mps-control'
                     client_socket.sendall(cmd.encode())
                     response = client_socket.recv(1024).decode()
                 else:
@@ -163,22 +164,28 @@ class manager:
                     client_socket.sendall(cmd.encode())
                     response = client_socket.recv(1024).decode()
 
-                    client_socket.sendall(cmd_type.encode())
-                    response = client_socket.recv(1024).decode()
-                    cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={value.MIG_UUID} && (echo get_server_list | sudo -E nvidia-cuda-mps-control)'
-                    client_socket.sendall(cmd.encode())
-                    mps_server_pid = client_socket.recv(1024).decode()
+                    
+                    # client_socket.sendall(cmd_type.encode())
+                    # response = client_socket.recv(1024).decode()
+                    # cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={value.MIG_UUID} && (echo get_server_list | sudo -E nvidia-cuda-mps-control)'
+                    # client_socket.sendall(cmd.encode())
+                    # mps_server_pid = client_socket.recv(1024).decode()
 
-                    client_socket.sendall(cmd_type.encode())
-                    response = client_socket.recv(1024).decode()
-                    cmd = f'echo set_active_thread_percentage {mps_server_pid} {value.MPS_Percentage} | sudo -E nvidia-cuda-mps-control'
-                    client_socket.sendall(cmd.encode())
-                    response = client_socket.recv(1024).decode()
+                    # client_socket.sendall(cmd_type.encode())
+                    # response = client_socket.recv(1024).decode()
+                    # cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={value.MIG_UUID} && echo set_active_thread_percentage {mps_server_pid} {value.MPS_Percentage} | sudo -E nvidia-cuda-mps-control'
+                    # client_socket.sendall(cmd.encode())
+                    # response = client_socket.recv(1024).decode()
 
         cmd_type = 'run'
         client_socket.sendall(cmd_type.encode())
         response = client_socket.recv(1024).decode()
-        cmd = f'cd {key.work_dir} && CUDA_VISIBLE_DEVICES={value.MIG_UUID}  conda run -n {key.dev} {key.command}'
+
+        if value.Use_MPS:
+            cmd = f'{value.MIG_UUID},Y,{key.work_dir},{key.dev},{key.command},{value.MPS_Percentage}'
+        else:
+            cmd = f'{value.MIG_UUID},N,{key.work_dir},{key.dev},{key.command},{value.MPS_Percentage}'
+        # cmd = f'cd {key.work_dir} && CUDA_VISIBLE_DEVICES={value.MIG_UUID}  conda run -n {key.dev} {key.command}'
         client_socket.sendall(cmd.encode())
         response = client_socket.recv(1024).decode()
 
