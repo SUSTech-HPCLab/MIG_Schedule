@@ -95,11 +95,6 @@ class Worker:
                     response_message = 'okk'
                     client_socket.sendall(response_message.encode())
 
-                # if response_message == 'finish':
-                   
-                #     client_socket.close()
-                #     break
-
 
     def return_uuid(self, server_port=22222):
         def execute_command(command):
