@@ -33,7 +33,7 @@ result = result.decode().strip()
 # pid = result
 # print("2")
 
-# cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={MIG_UUID} && echo set_active_thread_percentage {pid} {20} | sudo -E nvidia-cuda-mps-control'
+# cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={MIG_UUID} && echo set_active_thread_percentage {pid} {100} | sudo -E nvidia-cuda-mps-control'
 # result = subprocess.check_output(cmd, shell=True)
 # result = result.decode().strip()
 
@@ -41,10 +41,8 @@ result = result.decode().strip()
 # cmd=f'cd /home/zbw/MIG/MIG_Schedule/schedule && export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && CUDA_VISIBLE_DEVICES={MIG_UUID}  python test_program.py'
 # result = subprocess.check_output(cmd, shell=True)
 # result = result.decode().strip()
-# # command_thread = threading.Thread(target=execute_command, args=(cmd,))
-# # command_thread.start()
-# print(cmd)
-
+# command_thread = threading.Thread(target=execute_command, args=(cmd,))
+# command_thread.start()
 # cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={MIG_UUID} && echo get_active_thread_percentage {pid} | sudo -E nvidia-cuda-mps-control'
 # print(cmd)
 # result = subprocess.check_output(cmd, shell=True)
@@ -54,6 +52,6 @@ result = result.decode().strip()
 # cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={MIG_UUID} && echo quit | sudo -E  nvidia-cuda-mps-control'
 # result = subprocess.check_output(cmd, shell=True)
 # result = result.decode().strip()
-if result == '':
-    print("?")
-print(result)
+# if result == '':
+#     print("?")
+# print(result)

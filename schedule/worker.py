@@ -54,23 +54,21 @@ class Worker:
                     client_socket.sendall(response_message.encode())
                     data = client_socket.recv(1024)
                     received_message = data.decode()
-
-
-
-                   
+      
                     def execute_command(command):
                         commands = command.split(",")
                         cmd = ''
                         if commands[1] == 'Y':
                             CUDA_MPS_PIPE_DIRECTORY = f'/tmp/{commands[0]}-pipe'
                             CUDA_MPS_LOG_DIRECTORY=f'/tmp/{commands[0]}-log'
+
+                            cmd=f'cd /home/zbw/MIG/MIG_Schedule/schedule && export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && CUDA_VISIBLE_DEVICES={commands[0]}  python warm.py'
+                            result = subprocess.check_output(cmd, shell=True)
+
                             cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && export CUDA_VISIBLE_DEVICES={commands[0]} && (echo get_server_list | sudo -E nvidia-cuda-mps-control)'
                             pid = subprocess.check_output(cmd, shell=True)
                             pid = pid.decode().strip()
-                            print("testing1")
-                            cmd=f'cd /home/zbw/MIG/MIG_Schedule/schedule && export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && CUDA_VISIBLE_DEVICES={commands[0]}  python warm.py'
-                            result = subprocess.check_output(cmd, shell=True)
-                            print("testing2 ")
+
                             # cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && echo set_active_thread_percentage {pid} {commands[5]} | sudo -E nvidia-cuda-mps-control && cd {commands[2]} && CUDA_VISIBLE_DEVICES={commands[0]}  conda run -n {commands[3]} {commands[4]}'
                             cmd = f'export CUDA_MPS_PIPE_DIRECTORY={CUDA_MPS_PIPE_DIRECTORY} && export CUDA_MPS_LOG_DIRECTORY={CUDA_MPS_LOG_DIRECTORY} && echo set_active_thread_percentage {pid} {commands[5]} | sudo -E nvidia-cuda-mps-control && cd {commands[2]} && CUDA_VISIBLE_DEVICES={commands[0]}  {commands[4]}'
                             result = subprocess.check_output(cmd, shell=True)
