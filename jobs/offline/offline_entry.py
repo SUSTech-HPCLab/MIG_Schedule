@@ -33,10 +33,10 @@ def run_command(command):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--model", type=str)
+parser.add_argument("--config", type=str)
 args = parser.parse_args()
 
 task = args.model
-print(task)
 if task == 'unet':
     command_to_run = "cd /home/zbw/MIG/MIG_Schedule/jobs/offline/Unet && conda run -n Abacus python train.py --amp"
     run_command(command_to_run)

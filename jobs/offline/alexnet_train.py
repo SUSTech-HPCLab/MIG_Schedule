@@ -54,7 +54,7 @@ class AlexNet(nn.Module):
 # Author:WeiFeng Liu
 # @Time: 2021/11/4 下午12:59
 
-
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -98,8 +98,10 @@ def alxnet_train():
 
     train_loss = []
     for epoch in range(epochs):
+       
         sum_loss = 0
         for batch_idx,(x,y) in enumerate(train_loader):
+            start = time.time()
             x = x.to(device)
             y = y.to(device)
             pred = net(x)
@@ -110,7 +112,9 @@ def alxnet_train():
             optimizer.step()
             sum_loss += loss.item()
             train_loss.append(loss.item())
-            print(["epoch:%d , batch:%d , loss:%.3f" %(epoch,batch_idx,loss.item())])
+            print(time.time() - start)
+
+alxnet_train()
 
 
 

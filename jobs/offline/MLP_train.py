@@ -35,8 +35,8 @@ def MLP_train():
     lossfunc = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(params = model.parameters(), lr = 0.01)
     for epoch in range(n_epochs):
-        train_loss = 0.0
         for data,target in train_loader:
+            start = time.time()
             optimizer.zero_grad()  
             data = data.to(device)
             target = target.to(device)
@@ -44,7 +44,5 @@ def MLP_train():
             loss = lossfunc(output,target)  
             loss.backward()        
             optimizer.step()        
-            train_loss += loss.item()*data.size(0)
-        train_loss = train_loss / len(train_loader.dataset)
-        print('Epoch:  {}  \tTraining Loss: {:.6f}'.format(epoch + 1, train_loss))
-
+            print(time.time() - start)
+MLP_train()
