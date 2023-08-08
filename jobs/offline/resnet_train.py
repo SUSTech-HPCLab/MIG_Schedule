@@ -1,4 +1,5 @@
 import torch
+import time
 from torch import nn, optim
 import torchvision.transforms as transforms
 from torchvision import datasets
@@ -121,7 +122,7 @@ class ResNet50(nn.Module):
         return out
 
 
-def main():
+def resnet_train():
     batchsz = 128
 
     cifar_train = datasets.CIFAR10('data/cifar', True, transform=transforms.Compose([
@@ -189,7 +190,4 @@ def main():
             acc = total_correct / total_num
             print(epoch, 'test acc:', acc)
 
-
-if __name__ == '__main__':
-    main()
 

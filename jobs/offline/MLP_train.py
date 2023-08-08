@@ -4,15 +4,8 @@ import torch.nn.functional as F   # 激励函数的库
 from torchvision import datasets
 import torchvision.transforms as transforms
 import numpy as np
+import time
 
-n_epochs = 10     
-batch_size = 32  
-
-train_data = datasets.MNIST(root = './data', train = True, download = True, transform = transforms.ToTensor())
-test_data = datasets.MNIST(root = './data', train = True, download = True, transform = transforms.ToTensor())
-train_loader = torch.utils.data.DataLoader(train_data, batch_size = batch_size, num_workers = 0)
-test_loader = torch.utils.data.DataLoader(test_data, batch_size = batch_size, num_workers = 0)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class MLP(torch.nn.Module):   
     def __init__(self):
@@ -28,7 +21,17 @@ class MLP(torch.nn.Module):
         dout = F.softmax(self.fc3(dout), dim=1) 
         return dout
 
-def train():
+def MLP_train():
+    n_epochs = 10     
+    batch_size = 32  
+
+    train_data = datasets.MNIST(root = './data', train = True, download = True, transform = transforms.ToTensor())
+    test_data = datasets.MNIST(root = './data', train = True, download = True, transform = transforms.ToTensor())
+    train_loader = torch.utils.data.DataLoader(train_data, batch_size = batch_size, num_workers = 0)
+    test_loader = torch.utils.data.DataLoader(test_data, batch_size = batch_size, num_workers = 0)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = MLP()
+    model = model.to(device)
     lossfunc = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(params = model.parameters(), lr = 0.01)
     for epoch in range(n_epochs):
@@ -45,7 +48,3 @@ def train():
         train_loss = train_loss / len(train_loader.dataset)
         print('Epoch:  {}  \tTraining Loss: {:.6f}'.format(epoch + 1, train_loss))
 
-model = MLP()
-model = model.to(device)
-if __name__ == '__main__':
-    train()

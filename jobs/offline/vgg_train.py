@@ -119,36 +119,7 @@ class VGG19(torch.nn.Module):
         return logits,probas
 
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
-batch_size = 64
-train_dataset = datasets.CIFAR10(root='data', 
-                                 train=True, 
-                                 transform=transforms.ToTensor(),
-                                 download=True)
-
-test_dataset = datasets.CIFAR10(root='data', 
-                                train=False, 
-                                transform=transforms.ToTensor())
-
-
-train_loader = DataLoader(dataset=train_dataset, 
-                          batch_size=batch_size, 
-                          shuffle=True)
-
-test_loader = DataLoader(dataset=test_dataset, 
-                         batch_size=batch_size, 
-                         shuffle=False)
-
-
-NUM_EPOCHS = 15
-
-model = VGG19(num_classes=10)
-
-model = model.to(DEVICE)
-
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 
 def compute_accuracy_and_loss(model, data_loader, device):
@@ -166,54 +137,84 @@ def compute_accuracy_and_loss(model, data_loader, device):
         correct_pred += (predicted_labels == targets).sum()
     return correct_pred.float()/num_examples * 100, cross_entropy/num_examples
     
+def vgg_train():
+    DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-start_time = time.time()
-train_acc_lst, valid_acc_lst = [], []
-train_loss_lst, valid_loss_lst = [], []
-valid_loader = test_loader
 
-for epoch in range(NUM_EPOCHS):
+    batch_size = 64
+    train_dataset = datasets.CIFAR10(root='data', 
+                                 train=True, 
+                                 transform=transforms.ToTensor(),
+                                 download=True)
+
+    test_dataset = datasets.CIFAR10(root='data', 
+                                train=False, 
+                                transform=transforms.ToTensor())
+
+
+    train_loader = DataLoader(dataset=train_dataset, 
+                          batch_size=batch_size, 
+                          shuffle=True)
+
+    test_loader = DataLoader(dataset=test_dataset, 
+                         batch_size=batch_size, 
+                         shuffle=False)
+
+
+    NUM_EPOCHS = 15
+
+    model = VGG19(num_classes=10)
+
+    model = model.to(DEVICE)
+
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    start_time = time.time()
+    train_acc_lst, valid_acc_lst = [], []
+    train_loss_lst, valid_loss_lst = [], []
+    valid_loader = test_loader
+
+    for epoch in range(NUM_EPOCHS):
     
-    model.train()
+        model.train()
     
-    for batch_idx, (features, targets) in enumerate(train_loader):
+        for batch_idx, (features, targets) in enumerate(train_loader):
     
         ### PREPARE MINIBATCH
-        features = features.to(DEVICE)
-        targets = targets.to(DEVICE)
+            features = features.to(DEVICE)
+            targets = targets.to(DEVICE)
             
-        ### FORWARD AND BACK PROP
-        logits, probas = model(features)
-        cost = F.cross_entropy(logits, targets)
-        optimizer.zero_grad()
+            ### FORWARD AND BACK PROP
+            logits, probas = model(features)
+            cost = F.cross_entropy(logits, targets)
+            optimizer.zero_grad()
         
-        cost.backward()
+            cost.backward()
         
-        ### UPDATE MODEL PARAMETERS
-        optimizer.step()
+            ### UPDATE MODEL PARAMETERS
+            optimizer.step()
         
-        ### LOGGING
-        if not batch_idx % 300:
-            print (f'Epoch: {epoch+1:03d}/{NUM_EPOCHS:03d} | '
-                   f'Batch {batch_idx:03d}/{len(train_loader):03d} |' 
-                   f' Cost: {cost:.4f}')
+            ### LOGGING
+            if not batch_idx % 300:
+                print (f'Epoch: {epoch+1:03d}/{NUM_EPOCHS:03d} | '
+                    f'Batch {batch_idx:03d}/{len(train_loader):03d} |' 
+                    f' Cost: {cost:.4f}')
 
-    # no need to build the computation graph for backprop when computing accuracy
-    model.eval()
-    with torch.set_grad_enabled(False):
-        train_acc, train_loss = compute_accuracy_and_loss(model, train_loader, device=DEVICE)
-        valid_acc, valid_loss = compute_accuracy_and_loss(model, valid_loader, device=DEVICE)
-        train_acc_lst.append(train_acc)
-        valid_acc_lst.append(valid_acc)
-        train_loss_lst.append(train_loss)
-        valid_loss_lst.append(valid_loss)
-        print(f'Epoch: {epoch+1:03d}/{NUM_EPOCHS:03d} Train Acc.: {train_acc:.2f}%'
+        # no need to build the computation graph for backprop when computing accuracy
+        model.eval()
+        with torch.set_grad_enabled(False):
+            train_acc, train_loss = compute_accuracy_and_loss(model, train_loader, device=DEVICE)
+            valid_acc, valid_loss = compute_accuracy_and_loss(model, valid_loader, device=DEVICE)
+            train_acc_lst.append(train_acc)
+            valid_acc_lst.append(valid_acc)
+            train_loss_lst.append(train_loss)
+            valid_loss_lst.append(valid_loss)
+            print(f'Epoch: {epoch+1:03d}/{NUM_EPOCHS:03d} Train Acc.: {train_acc:.2f}%'
               f' | Validation Acc.: {valid_acc:.2f}%')
         
     elapsed = (time.time() - start_time)/60
     print(f'Time elapsed: {elapsed:.2f} min')
   
-elapsed = (time.time() - start_time)/60
-print(f'Total Training Time: {elapsed:.2f} min')
+    elapsed = (time.time() - start_time)/60
+    print(f'Total Training Time: {elapsed:.2f} min')
 
 

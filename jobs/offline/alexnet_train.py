@@ -87,25 +87,30 @@ cifar_train = datasets.CIFAR10('data/cifar', True, transform=transforms.Compose(
 train_loader = DataLoader(cifar_train,
                           batch_size=batch_size,
                           shuffle = True,)
-net = AlexNet().cuda(device)
-loss_func = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(),lr=lr,momentum=0.9)
 
-train_loss = []
-for epoch in range(epochs):
-    sum_loss = 0
-    for batch_idx,(x,y) in enumerate(train_loader):
-        x = x.to(device)
-        y = y.to(device)
-        pred = net(x)
 
-        optimizer.zero_grad()
-        loss = loss_func(pred,y)
-        loss.backward()
-        optimizer.step()
-        sum_loss += loss.item()
-        train_loss.append(loss.item())
-        print(["epoch:%d , batch:%d , loss:%.3f" %(epoch,batch_idx,loss.item())])
+
+def alxnet_train():
+
+    net = AlexNet().cuda(device)
+    loss_func = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(),lr=lr,momentum=0.9)
+
+    train_loss = []
+    for epoch in range(epochs):
+        sum_loss = 0
+        for batch_idx,(x,y) in enumerate(train_loader):
+            x = x.to(device)
+            y = y.to(device)
+            pred = net(x)
+
+            optimizer.zero_grad()
+            loss = loss_func(pred,y)
+            loss.backward()
+            optimizer.step()
+            sum_loss += loss.item()
+            train_loss.append(loss.item())
+            print(["epoch:%d , batch:%d , loss:%.3f" %(epoch,batch_idx,loss.item())])
 
 
 
