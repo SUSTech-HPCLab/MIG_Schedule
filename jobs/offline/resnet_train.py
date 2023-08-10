@@ -125,7 +125,7 @@ class ResNet50(nn.Module):
 def resnet_train():
     batchsz = 128
 
-    cifar_train = datasets.CIFAR10('data/cifar', True, transform=transforms.Compose([
+    cifar_train = datasets.CIFAR10('/home/zbw/MIG/MIG_Schedule/jobs/offline/data/cifar', True, transform=transforms.Compose([
         transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -133,7 +133,7 @@ def resnet_train():
     ]), download=True)
     cifar_train = DataLoader(cifar_train, batch_size=batchsz, shuffle=True)
 
-    cifar_test = datasets.CIFAR10('data/cifar', False, transform=transforms.Compose([
+    cifar_test = datasets.CIFAR10('/home/zbw/MIG/MIG_Schedule/jobs/offline/data/cifar', False, transform=transforms.Compose([
         transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -150,7 +150,7 @@ def resnet_train():
     optimizer = optim.Adam(model.parameters(), lr=1e-3)
     # print(model)
 
-    for epoch in range(1000):
+    for epoch in range(10):
 
         model.train()
         for batchidx, (x, label) in enumerate(cifar_train):
@@ -164,8 +164,6 @@ def resnet_train():
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
-        print(epoch, 'loss:', loss.item())
 
         model.eval()
         with torch.no_grad():
@@ -187,7 +185,5 @@ def resnet_train():
                 total_num += x.size(0)
                 # print(correct)
 
-            acc = total_correct / total_num
-            print(epoch, 'test acc:', acc)
 
 

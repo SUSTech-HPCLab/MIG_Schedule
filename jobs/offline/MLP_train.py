@@ -1,6 +1,6 @@
 
 import torch
-import torch.nn.functional as F   # 激励函数的库
+import torch.nn.functional as F  
 from torchvision import datasets
 import torchvision.transforms as transforms
 import numpy as np
@@ -22,11 +22,11 @@ class MLP(torch.nn.Module):
         return dout
 
 def MLP_train():
-    n_epochs = 10     
+    n_epochs = 20  
     batch_size = 32  
 
-    train_data = datasets.MNIST(root = './data', train = True, download = True, transform = transforms.ToTensor())
-    test_data = datasets.MNIST(root = './data', train = True, download = True, transform = transforms.ToTensor())
+    train_data = datasets.MNIST(root = '/home/zbw/MIG/MIG_Schedule/jobs/offline/data', train = True, download = True, transform = transforms.ToTensor())
+    test_data = datasets.MNIST(root = '/home/zbw/MIG/MIG_Schedule/jobs/offline/data', train = True, download = True, transform = transforms.ToTensor())
     train_loader = torch.utils.data.DataLoader(train_data, batch_size = batch_size, num_workers = 0)
     test_loader = torch.utils.data.DataLoader(test_data, batch_size = batch_size, num_workers = 0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,7 +36,6 @@ def MLP_train():
     optimizer = torch.optim.SGD(params = model.parameters(), lr = 0.01)
     for epoch in range(n_epochs):
         for data,target in train_loader:
-            start = time.time()
             optimizer.zero_grad()  
             data = data.to(device)
             target = target.to(device)
@@ -44,5 +43,3 @@ def MLP_train():
             loss = lossfunc(output,target)  
             loss.backward()        
             optimizer.step()        
-            print(time.time() - start)
-MLP_train()

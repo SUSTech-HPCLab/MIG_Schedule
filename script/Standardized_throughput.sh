@@ -1,12 +1,11 @@
 #!/bin/bash
-
-# online job profile
+# -*- coding: utf-8 -*-
+# offline job profile
 CU_DEV=CUDA_VISIBLE_DEVICES
 dev0='GPU-08dffabe-6be4-81d7-ba7d-1d96612fb099'
 GPU_ID=0
 workdir=/home/zbw/MIG/MIG_Schedule
-batch_size=("32" "16" "8" "4")
-model_list=("resnet50" "resnet101" "resnet152" "vgg19" "vgg16" "inception_v3" "unet" "deeplabv3" "mobilenet_v2" "open_unmix" "alexnet" "bert")
+model_list=("mlp" "resnet" "vgg19" "alexnet")
 
 
 
@@ -41,20 +40,16 @@ function test {
     uuid=$(${get_uuid_pick} ${info})
     echo $uuid
     for model in ${model_list[@]}; do
-        for batch in ${batch_size[@]}; do
-            python $workdir/main.py --config  $info --task $model --batch $batch
-        done
+        python $workdir/jobs/offline/offline_entry.py  --config  $info --model $model --profile True
     done
     sleep 3
     destroy $ID
 }
 
-sudo nvidia-smi -i 0 -mig 0
-for model in ${model_list[@]}; do
-    for batch in ${batch_size[@]}; do
-        python $workdir/main.py --config  baseline --task $model --batch $batch
-    done
-done
+# sudo nvidia-smi -i 0 -mig 0
+# for model in ${model_list[@]}; do
+#     python $workdir/jobs/offline/offline_entry.py  --config  baseline --model $model --profile True
+# done
 echo 'open MIG model'
 sudo nvidia-smi -i 0 -mig 1
 
@@ -67,3 +62,4 @@ test 19 1c-1g-10gb
 echo 'close MIG model'
 sleep 5
 sudo nvidia-smi -i 0 -mig 0
+

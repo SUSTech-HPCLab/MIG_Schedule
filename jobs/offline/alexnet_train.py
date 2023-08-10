@@ -65,7 +65,7 @@ from torch.utils.data import DataLoader
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # 设置超参数
-epochs = 50
+epochs = 20
 batch_size = 256
 lr = 0.01
 
@@ -77,7 +77,7 @@ transform = transforms.Compose([
     ])
 
 
-cifar_train = datasets.CIFAR10('data/cifar', True, transform=transforms.Compose([
+cifar_train = datasets.CIFAR10('/home/zbw/MIG/MIG_Schedule/jobs/offline/data/cifar', True, transform=transforms.Compose([
         transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
@@ -101,7 +101,6 @@ def alxnet_train():
        
         sum_loss = 0
         for batch_idx,(x,y) in enumerate(train_loader):
-            start = time.time()
             x = x.to(device)
             y = y.to(device)
             pred = net(x)
@@ -112,9 +111,7 @@ def alxnet_train():
             optimizer.step()
             sum_loss += loss.item()
             train_loss.append(loss.item())
-            print(time.time() - start)
 
-alxnet_train()
 
 
 

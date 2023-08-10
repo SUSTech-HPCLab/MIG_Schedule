@@ -8,3 +8,8 @@ class sheduler:
         MIG = None
         return ip,  GPU_id, MIG
     
+
+
+def Weighted_Bipartite():
+
+    

@@ -104,9 +104,7 @@ with torch.no_grad():
 
         time_list.append(time.time() - start)
 
-with open('/home/zbw/MIG/MIG_Schedule/jobs/online/standardized', "a+") as f:
-    result = config + ' ' + str(average_without_min_max(time_list)) + '\n'
-    f.write(result)
+
     
 
 

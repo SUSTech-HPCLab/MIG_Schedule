@@ -142,12 +142,12 @@ def vgg_train():
 
 
     batch_size = 64
-    train_dataset = datasets.CIFAR10(root='data', 
+    train_dataset = datasets.CIFAR10(root='/home/zbw/MIG/MIG_Schedule/jobs/offline/data', 
                                  train=True, 
                                  transform=transforms.ToTensor(),
                                  download=True)
 
-    test_dataset = datasets.CIFAR10(root='data', 
+    test_dataset = datasets.CIFAR10(root='/home/zbw/MIG/MIG_Schedule/jobs/offline/data', 
                                 train=False, 
                                 transform=transforms.ToTensor())
 
@@ -194,10 +194,6 @@ def vgg_train():
             optimizer.step()
         
             ### LOGGING
-            if not batch_idx % 300:
-                print (f'Epoch: {epoch+1:03d}/{NUM_EPOCHS:03d} | '
-                    f'Batch {batch_idx:03d}/{len(train_loader):03d} |' 
-                    f' Cost: {cost:.4f}')
 
         # no need to build the computation graph for backprop when computing accuracy
         model.eval()
@@ -208,13 +204,6 @@ def vgg_train():
             valid_acc_lst.append(valid_acc)
             train_loss_lst.append(train_loss)
             valid_loss_lst.append(valid_loss)
-            print(f'Epoch: {epoch+1:03d}/{NUM_EPOCHS:03d} Train Acc.: {train_acc:.2f}%'
-              f' | Validation Acc.: {valid_acc:.2f}%')
         
-    elapsed = (time.time() - start_time)/60
-    print(f'Time elapsed: {elapsed:.2f} min')
-  
-    elapsed = (time.time() - start_time)/60
-    print(f'Total Training Time: {elapsed:.2f} min')
 
 
