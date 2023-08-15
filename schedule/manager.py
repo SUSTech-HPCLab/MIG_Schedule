@@ -1,6 +1,11 @@
-from scheduler.scheduler import sheduler
-from util import *
-import util
+import sys
+sys.path.append('/home/zbw/MIG/MIG_Schedule')
+
+
+from schedule.scheduler.scheduler import sheduler
+
+import util.util
+from util.util import *
 import socket
 import queue
 import threading

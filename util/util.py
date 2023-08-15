@@ -88,3 +88,20 @@ def destory_instance(table_value: table_value):
     client_socket.close()
 
 
+def MIG_check(config):
+    # return support config
+    GPC = 7
+    memory = 80
+
+    for i in config:
+        if i == 7:
+            GPC  = GPC - 7
+            memory = memory - 80
+
+        if i == 4:
+            GPC = GPC - 4
+            memory = memory -40
+        
+        if i == 3:
+            GPC = GPC - 3
+            memory = memory -4

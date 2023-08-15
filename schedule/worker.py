@@ -1,10 +1,13 @@
+import sys
+sys.path.append('/home/zbw/MIG/MIG_Schedule')
+
 import subprocess
 import socket
 import threading
 import subprocess
 import re
 import os
-import util
+import util.util
 class Worker:
     def __init__(self, port):
         self.port = port

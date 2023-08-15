@@ -19,7 +19,19 @@ def binomial_matching(Net):
     net = np.array(Net)
     km = KM()
     max_ = km.compute(net.copy())
-    return max_
+    result = []
+    for i in max_:
+        result.append(i[1])
+    return result
+
+
+def muxflow():
+    pass
+
+
+def miso():
+    pass
+
 
 
     
