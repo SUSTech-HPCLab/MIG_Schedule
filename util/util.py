@@ -1,7 +1,11 @@
 
 import subprocess
 import socket
+from itertools import product
 import re
+
+config_list = [[7], [4,3], [4,2,1], [4,1,1,1], [3,3], [3,2,1], [3,1,1,1],[2,2,3], [2,1,1,3], [1,1,2,3], [1,1,1,1,3], [2,2,2,1], [2,1,1,2,1],[1,1,2,2,1],[2,1,1,1,1,1],
+                   [1,1,2,1,1,1], [1,1,1,1,2,1], [1,1,1,1,1,2], [1,1,1,1,1,1,1]]
 class table_value:
     def __init__(self, ip, port, GPU_ID, MIG_config, GI_ID, job_list=[]):
         self.ip = ip
@@ -90,18 +94,17 @@ def destory_instance(table_value: table_value):
 
 def MIG_check(config):
     # return support config
-    GPC = 7
-    memory = 80
+    global config_list
+    
+    if config in config_list:
+        return True
+    else:
+        return False
 
-    for i in config:
-        if i == 7:
-            GPC  = GPC - 7
-            memory = memory - 80
 
-        if i == 4:
-            GPC = GPC - 4
-            memory = memory -40
-        
-        if i == 3:
-            GPC = GPC - 3
-            memory = memory -4
+def get_MIG_config():
+    global config_list
+    return config_list
+
+
+
