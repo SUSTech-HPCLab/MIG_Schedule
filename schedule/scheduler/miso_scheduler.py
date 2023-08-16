@@ -113,7 +113,6 @@ class miso_sheduler:
             for j in online_config:
                 i.remove(j)
 
-        print(valid_config)
         best_obj = 0
         best_config = None
         for i in valid_config:
@@ -170,18 +169,18 @@ class miso_sheduler:
 
 
 
-test1  = online_job('resnet152', '16' , 80)
-test2  = offline_job('resnet152', '8' , 800)
-test3  = offline_job('resnet50', '16' , 800)
-test4 = offline_job("bert", "8", 800)
-jobs = [test1]
-GPU_list = [[]]
-test = miso_sheduler(GPU_list=GPU_list)
+# test1  = online_job('resnet152', '16' , 80)
+# test2  = offline_job('resnet152', '8' , 800)
+# test3  = offline_job('resnet50', '16' , 800)
+# test4 = offline_job("bert", "8", 800)
+# jobs = [test1]
+# GPU_list = [[]]
+# test = miso_sheduler(GPU_list=GPU_list)
 
-test.miso_cluster(test1)
-test.miso_cluster(test2)
-print(test.GPU_list)
-test.miso_cluster(test4)
+# test.miso_cluster(test1)
+# test.miso_cluster(test2)
+# print(test.GPU_list)
+# test.miso_cluster(test4)
 # test.miso_cluster(test2)
 # test.miso_partition_optimizer(jobs)
 # print(test.best_fit(test1))
