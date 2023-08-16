@@ -126,12 +126,10 @@ class miso_sheduler:
                 config = []
                 for z in combo:
                     config.append(config_map.get(z))
-                
-                    throught =  self.Calculated_throughput(config, offline_jobs)
-                    if throught > best_obj:
-                        best_config = config
-                        best_obj = throught
-                        \
+                throught =  self.Calculated_throughput(config, offline_jobs)
+                if throught > best_obj:
+                    best_config = config
+                    best_obj = throught
         print(best_obj)
         print(best_config)
         for i in offline_jobs:
@@ -141,9 +139,6 @@ class miso_sheduler:
 
 
    
-
-
-
     def Calculated_throughput(self, config_list, jobs):
         throughput = 0
         global job_list
@@ -185,6 +180,7 @@ test = miso_sheduler(GPU_list=GPU_list)
 
 test.miso_cluster(test1)
 test.miso_cluster(test2)
+print(test.GPU_list)
 test.miso_cluster(test4)
 # test.miso_cluster(test2)
 # test.miso_partition_optimizer(jobs)
