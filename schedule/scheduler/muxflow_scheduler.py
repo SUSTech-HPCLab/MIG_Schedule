@@ -7,7 +7,6 @@ import queue
 from schedule.scheduler.miso_scheduler import online_job, offline_job
 from schedule.KM import KM
 from jobs.profile.standardized_throughput import job
-import util.util
 path = '/home/zbw/MIG/MIG_Schedule/jobs/profile/double_base_standardlized'
 job_list =[]
 with open(path, 'r') as f:
@@ -17,7 +16,7 @@ with open(path, 'r') as f:
         job_list.append(lines)
 f.close()
 
-class miso_sheduler:
+class muxflow_sheduler:
     def __init__(self, GPU_list=[]):
         self.GPU_list = GPU_list
         self.online_job_queue = queue.Queue()
@@ -68,23 +67,23 @@ class miso_sheduler:
                 return float(i[5]) 
             
 
-test1 = online_job('alexnet', '16', 80)
-test5 = online_job('resnet50', '16', 80)
-test6 = online_job('resnet50', '16', 80)
+# test1 = online_job('alexnet', '16', 80)
+# test5 = online_job('resnet50', '16', 80)
+# test6 = online_job('resnet50', '16', 80)
 
-test2 = offline_job("bert", '32', 100)
-test3 = offline_job("bert", '32', 100)
-test4 = offline_job("mobilenet_v2", '32', 100)
-test = miso_sheduler(GPU_list=[[],[]])
+# test2 = offline_job("bert", '32', 100)
+# test3 = offline_job("bert", '32', 100)
+# test4 = offline_job("mobilenet_v2", '32', 100)
+# test = miso_sheduler(GPU_list=[[],[]])
 
-online = []
-online.append(test1)
-# online.append(test5)
-# online.append(test6)
-offline = []
-offline.append(test2)
-offline.append(test3)
-test.muxflow(online_jobs=online, offline_jobs=offline)
+# online = []
+# online.append(test1)
+# # online.append(test5)
+# # online.append(test6)
+# offline = []
+# offline.append(test2)
+# offline.append(test3)
+# test.muxflow(online_jobs=online, offline_jobs=offline)
 
 
 

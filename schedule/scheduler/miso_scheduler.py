@@ -13,6 +13,7 @@ from jobs.profile.standardized_throughput import get_job_list
 
 path = '/home/zbw/MIG/MIG_Schedule/jobs/profile/single_standardlized'
 job_list = []
+
 with open(path, 'r') as f:
     for line in f:
         line = line.strip()
@@ -22,6 +23,10 @@ f.close()
 
 
 online_job_list = get_job_list()
+
+config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:"1c-1g-10gb"}
+
+reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
 
 class online_job:
     def __init__(self, model_name, batch_Size, qos):
@@ -40,15 +45,17 @@ class offline_job:
     def __str__(self):
         return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size}"
 
-config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:"1c-1g-10gb"}
 
-reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
 class miso_sheduler:
     def __init__(self, GPU_list = [], max_job_per_GPU=3):
         self.GPU_list = GPU_list
+        self.config_list = []
         self.max_job_per_GPU = max_job_per_GPU
         self.online_job_queue = queue.Queue()
         self.offline_job_queue = queue.Queue()
+
+        for i in range(0, len(GPU_list)):
+            self.config_list.append([])
 
 
     def miso_cluster(self, new_job):
@@ -64,12 +71,16 @@ class miso_sheduler:
                     self.online_job_queue.put(new_job)
                 else:
                     self.offline_job_queue.put(new_job)
+                return False
+            return True
         
         else:
             if isinstance(new_job, online_job):
                 self.online_job_queue.put(new_job)
             else:
                 self.offline_job_queue.put(new_job)
+            return False
+            
 
     def get_index_list(self, GPU_list):
         sorted_indices = sorted(range(len(GPU_list)), key=lambda i: len(GPU_list[i]))
@@ -98,16 +109,18 @@ class miso_sheduler:
         for i in configs:
             valid = True
             if len(i) >= len(online_jobs) + len(offline_jobs):
+                tmp = i.copy()
                 for j in online_config:
-                    if j not in i:
+                    if j not in tmp:
                         valid = False
                         break
+                    else:
+                        tmp.remove(j)
                 if valid:
                     valid_config.append(i.copy())
 
         if len(valid_config) == 0:
             return False
-
 
         for i in valid_config:
             for j in online_config:
@@ -129,10 +142,16 @@ class miso_sheduler:
                 if throught > best_obj:
                     best_config = config
                     best_obj = throught
+
+                    
         print(best_obj)
-        print(best_config)
+        print()
+        print(best_config) 
         for i in offline_jobs:
             print(i)
+
+
+
         return True
                 
 
@@ -169,15 +188,25 @@ class miso_sheduler:
 
 
 
-# test1  = online_job('resnet152', '16' , 80)
+test1  = online_job('resnet152', '16' , 80)
+test1  = online_job('resnet152', '16' , 80)
 # test2  = offline_job('resnet152', '8' , 800)
 # test3  = offline_job('resnet50', '16' , 800)
 # test4 = offline_job("bert", "8", 800)
 # jobs = [test1]
-# GPU_list = [[]]
-# test = miso_sheduler(GPU_list=GPU_list)
+GPU_list = [[]]
+test = miso_sheduler(GPU_list=GPU_list)
 
-# test.miso_cluster(test1)
+# test.miso_cluster(online_job('resnet152', '16' , 80))
+# print(test.GPU_list)
+# test.miso_cluster(online_job('resnet50', '16' , 80))
+# print(test.GPU_list)
+# test.miso_cluster(online_job('resnet152', '16' , 80))
+# print(test.GPU_list)
+# test.miso_cluster(online_job('resnet152', '16' , 80))
+# print(test.GPU_list)
+test.miso_cluster(offline_job('resnet152', '16' , 80))
+test.miso_cluster(offline_job('resnet152', '16' , 80))
 # test.miso_cluster(test2)
 # print(test.GPU_list)
 # test.miso_cluster(test4)
