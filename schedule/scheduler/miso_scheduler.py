@@ -41,9 +41,14 @@ class offline_job:
         self.model_name = model_name
         self.batch_Size = batch_Size
         self.epoch = epoch
+        self.submit_time = 0
+        self.start_time = None
+        self.progress = None
+        self.end_time = None
+        self.time = 0
     
     def __str__(self):
-        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size}"
+        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size} time: {self.time}"
 
 
 class miso_sheduler:
@@ -65,7 +70,7 @@ class miso_sheduler:
         if job_num + 1 <= self.max_job_per_GPU:
           
             self.GPU_list[index_list[0]].append(new_job)
-            if(not self.miso_partition_optimizer(self.GPU_list[index_list[0]])):
+            if(not self.miso_partition_optimizer(self.GPU_list[index_list[0]], index_list[0])):
                 self.GPU_list[index_list[0]].remove(new_job)
                 if isinstance(new_job, online_job):
                     self.online_job_queue.put(new_job)
@@ -87,7 +92,7 @@ class miso_sheduler:
         return sorted_indices
     
     
-    def miso_partition_optimizer(self, jobs):
+    def miso_partition_optimizer(self, jobs, index):
         online_jobs = []
         offline_jobs = []
 
@@ -143,14 +148,15 @@ class miso_sheduler:
                     best_config = config
                     best_obj = throught
 
-                    
-        print(best_obj)
-        print()
-        print(best_config) 
-        for i in offline_jobs:
-            print(i)
+        
+        config_list = []
+        for i in jobs:
+            if isinstance(i, online_job):
+                config_list.append(config_map.get(online_config[online_jobs.index(i)]))
+            if isinstance(i, offline_job):
+                config_list.append(best_config[offline_jobs.index(i)])
 
-
+        self.config_list[index] = config_list
 
         return True
                 
@@ -185,34 +191,61 @@ class miso_sheduler:
                     min = GI
 
         return min
+    
+
+    def state_change(self, GPU_index, job):
+        index = self.GPU_list[GPU_index].index(job)
+        self.GPU_list[GPU_index].remove(job)
+        del self.config_list[GPU_index][index]
+        if not self.online_job_queue.empty:
+            self.miso_cluster(self.online_job_queue.get())                                      
+        else:
+            self.miso_cluster(self.offline_job_queue.get())
 
 
-
-test1  = online_job('resnet152', '16' , 80)
-test1  = online_job('resnet152', '16' , 80)
+# test1  = online_job('resnet152', '16' , 80)
+# # test1  = online_job('resnet152', '16' , 80)
 # test2  = offline_job('resnet152', '8' , 800)
-# test3  = offline_job('resnet50', '16' , 800)
-# test4 = offline_job("bert", "8", 800)
+# # # test3  = offline_job('resnet50', '16' , 800)
+# # # test4 = offline_job("bert", "8", 800)
 # jobs = [test1]
-GPU_list = [[]]
-test = miso_sheduler(GPU_list=GPU_list)
+# GPU_list = [[]]
+
+# test = miso_sheduler(GPU_list=GPU_list)
 
 # test.miso_cluster(online_job('resnet152', '16' , 80))
-# print(test.GPU_list)
+# test.miso_cluster(online_job('resnet152', '16' , 80))
+# test.miso_cluster(offline_job('resnet152', '16' , 700))
+# for i in test.GPU_list[0]:
+#     print(i)
+# test.miso_cluster(offline_job('resnet50', '16' , 800))
+# print(test.offline_job_queue.empty())
+# print(test.config_list)
+# test.state_change(0, test.GPU_list[0][2])
+# for i in test.GPU_list[0]:
+#     print(i)
+# print(test.config_list)
+
+# # test.miso_cluster(online_job('resnet152', '16' , 80))
+# # print(test.GPU_list)
+# # test.miso_cluster(online_job('resnet50', '16' , 80))
+# # print(test.GPU_list)
+# # test.miso_cluster(online_job('resnet152', '16' , 80))
+# # print(test.GPU_list)
 # test.miso_cluster(online_job('resnet50', '16' , 80))
-# print(test.GPU_list)
+# # print(test.GPU_list)
 # test.miso_cluster(online_job('resnet152', '16' , 80))
+# test.miso_cluster(offline_job('resnet152', '16' , 80))
+# test.miso_cluster(offline_job('resnet152', '16' , 80))
 # print(test.GPU_list)
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# print(test.GPU_list)
-test.miso_cluster(offline_job('resnet152', '16' , 80))
-test.miso_cluster(offline_job('resnet152', '16' , 80))
+# print(test.config_list)
 # test.miso_cluster(test2)
 # print(test.GPU_list)
 # test.miso_cluster(test4)
 # test.miso_cluster(test2)
 # test.miso_partition_optimizer(jobs)
 # print(test.best_fit(test1))
+
 
 
 
