@@ -1,13 +1,7 @@
-
 import sys
 sys.path.append('/home/zbw/MIG/MIG_Schedule')
 
-import numpy as np
-import queue
-import util.util
-
-from itertools import permutations
-from itertools import combinations
+from schedule.scheduler.miso_scheduler import online_job, offline_job
 from jobs.profile.standardized_throughput import get_job_list
 
 
@@ -27,29 +21,6 @@ online_job_list = get_job_list()
 config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:"1c-1g-10gb"}
 
 reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
-
-class online_job:
-    def __init__(self, model_name, batch_Size, qos):
-        self.model_name = model_name
-        self.batch_Size = batch_Size
-        self.qos = qos
-    def __str__(self):
-        return f"online Model Name: {self.model_name}  Batch Size: {self.batch_Size}"
-
-class offline_job:
-    def __init__(self, model_name, batch_Size, epoch):
-        self.model_name = model_name
-        self.batch_Size = batch_Size
-        self.epoch = epoch
-        self.submit_time = 0
-        self.start_time = -1
-        self.progress = 0
-        self.end_time = None
-        self.speed = 0
-    
-    def __str__(self):
-        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size} Start_time: {self.start_time}, End_time: {self.end_time} speed: {self.speed}"
-
 
 class miso_sheduler:
     def __init__(self, GPU_list = [], max_job_per_GPU=3):

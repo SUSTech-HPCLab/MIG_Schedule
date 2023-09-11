@@ -29,7 +29,6 @@ class simulator:
             for i in range(0, self.GPU_num):
                 GPU_list.append([])
 
-
             miso = miso_sheduler(GPU_list= GPU_list)
             for i in self.online_jobs:
                miso.miso_cluster(i)
@@ -52,20 +51,65 @@ class simulator:
             
 
             num = 0
+            job_list = []
             while True:
                 num = num + 1
                 for i in range(0, len(miso.GPU_list)):
-                    for j in miso.GPU_list[i]:
-                        if isinstance
+                    remove_jobs = []
+                    for j in range(0, len(miso.GPU_list[i])):
+                        if isinstance(miso.GPU_list[i][j], offline_job):
+                           miso.GPU_list[i][j].progress = miso.GPU_list[i][j].progress + miso.GPU_list[i][j].speed
+                           if miso.GPU_list[i][j].progress >= miso.GPU_list[i][j].epoch:
+                               remove_jobs.append(miso.GPU_list[i][j])
 
+                    if len(remove_jobs) != 0:
+                        for z in remove_jobs:
+                            z.end_time = num
+                            job_list.append(z)
+                            miso.state_change(i,z)
+
+                    for j in range(0, len(miso.GPU_list[i])):
+                        if isinstance(miso.GPU_list[i][j], online_job):
+                            continue
+                        
+                        if isinstance(miso.GPU_list[i][j], offline_job):
+                            if   miso.GPU_list[i][j].start_time == -1:
+                                miso.GPU_list[i][j].start_time = num
+                                self.caculate_completion_time(miso.GPU_list[i][j], miso.config_list[i][j])
+
+                if len(job_list) == 4:
+                    break
+            self.caculate_system_metrics(jobs=job_list)
             
 
     def caculate_completion_time(self, offline_job, config):
         global job_list
         for i in job_list:
             if i.model_name == offline_job.model_name and str(i.batch_Size) == str(offline_job.batch_Size) and config == i.config:
-                offline_job.time = int(offline_job.epoch) * float(i.average_time)/1000
+                offline_job.speed = 1000/float(i.average_time)
                 break
+
+    def caculate_system_metrics(self, jobs):
+        avarage_queue_time = 0
+        JCT = 0
+        makespan = 0
+        num = len(jobs)
+        for i in jobs:
+            avarage_queue_time = avarage_queue_time + int(i.start_time) - int(i.submit_time)
+            JCT = JCT + int(i.end_time) - int(i.submit_time)
+            if int(i.end_time) > makespan:
+                makespan = i.end_time
+        
+
+        avarage_queue_time = avarage_queue_time/num
+        JCT = JCT/num
+
+        print("avarage_queue_time : ", avarage_queue_time)
+        print("JCT: ", JCT)
+        print("makespan: ", makespan)
+
+
+
 
 
 test1  = online_job('resnet152', '16' , 80)
@@ -75,11 +119,13 @@ online_jobs.append(test1)
 
 offline_jobs = []
 
-test2  = offline_job('resnet152', '8' , 800)
-test3  = offline_job('resnet50', '16' , 800)
-
+test2  = offline_job('resnet152', '32' , 100000)
+test3  = offline_job('resnet50', '32' , 100000)
+test4  = offline_job('bert', '32' , 100000)
+test5  = offline_job('vgg16', '32' , 100000)
 offline_jobs.append(test2)
 offline_jobs.append(test3)
+offline_jobs.append(test4)
+offline_jobs.append(test5)
 
-
-test = simulator(GPU_num=1, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs)
+test = simulator(GPU_num=5, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs)
