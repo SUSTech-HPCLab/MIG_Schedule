@@ -1,6 +1,10 @@
 import sys
 sys.path.append('/home/zbw/MIG/MIG_Schedule')
+import queue
+import util.util
 
+from itertools import permutations
+from itertools import combinations
 from schedule.scheduler.miso_scheduler import online_job, offline_job
 from jobs.profile.standardized_throughput import get_job_list
 
@@ -8,6 +12,8 @@ from jobs.profile.standardized_throughput import get_job_list
 path = '/home/zbw/MIG/MIG_Schedule/jobs/profile/single_standardlized'
 job_list = []
 
+path2 = ''
+double_result = []
 with open(path, 'r') as f:
     for line in f:
         line = line.strip()
@@ -18,14 +24,15 @@ f.close()
 
 online_job_list = get_job_list()
 
+
 config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:"1c-1g-10gb"}
 
 reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
 
-class miso_sheduler:
-    def __init__(self, GPU_list = [], max_job_per_GPU=3):
+class I_sheduler:
+    def __init__(self, GPU_list = [[]], max_job_per_GPU=5):
         self.GPU_list = GPU_list
-        self.config_list = []
+        self.config_list = [[]]
         self.max_job_per_GPU = max_job_per_GPU
         self.online_job_queue = queue.Queue()
         self.offline_job_queue = queue.Queue()
@@ -33,16 +40,15 @@ class miso_sheduler:
         for i in range(0, len(GPU_list)):
             self.config_list.append([])
 
-
-    def miso_cluster(self, new_job):
-
-        index_list = self.get_index_list(self.GPU_list)
-        job_num = len(self.GPU_list[index_list[0]])
-        if job_num + 1 <= self.max_job_per_GPU:
-          
-            self.GPU_list[index_list[0]].append(new_job)
-            if(not self.miso_partition_optimizer(self.GPU_list[index_list[0]], index_list[0])):
-                self.GPU_list[index_list[0]].remove(new_job)
+    def I_cluster(self, new_job):
+        index,min = self.get_index_list(self.GPU_list)
+        if min + 1 <= self.max_job_per_GPU:
+            jobs = []
+            for i in self.GPU_list[index]:
+                for j in i:
+                    jobs.append(j)
+            jobs.append(new_job)
+            if(not self.partition_optimizer(jobs, index)):
                 if isinstance(new_job, online_job):
                     self.online_job_queue.put(new_job)
                 else:
@@ -57,13 +63,26 @@ class miso_sheduler:
                 self.offline_job_queue.put(new_job)
             return False
             
+               
+            
 
     def get_index_list(self, GPU_list):
-        sorted_indices = sorted(range(len(GPU_list)), key=lambda i: len(GPU_list[i]))
-        return sorted_indices
+        min = 9999
+        index = 0
+        for i in GPU_list:
+            num = 0 
+            for j in i:
+                for z in j:
+                    num = num + 1
+            
+            if num < min:
+                min = num 
+                index = GPU_list.index(i)
+        return index,min
     
     
-    def miso_partition_optimizer(self, jobs, index):
+    
+    def partition_optimizer(self, jobs, GPU_index):
         online_jobs = []
         offline_jobs = []
 
@@ -77,14 +96,18 @@ class miso_sheduler:
 
         for i in online_jobs:
             online_config.append(self.best_fit(i))
-    
+
+        concurrency_jobs = []
+        for i in range(0, len(online_jobs)):
+            if self.check_percentage(online_jobs[i], online_config[i]) <= 0.7:
+                concurrency_jobs.append(online_jobs[i])
+            
         configs = util.util.get_MIG_config()
         valid_config = []
-
-
+       
         for i in configs:
             valid = True
-            if len(i) >= len(online_jobs) + len(offline_jobs):
+            if len(i) >= len(online_jobs) + len(offline_jobs) - len(concurrency_jobs):
                 tmp = i.copy()
                 for j in online_config:
                     if j not in tmp:
@@ -94,52 +117,128 @@ class miso_sheduler:
                         tmp.remove(j)
                 if valid:
                     valid_config.append(i.copy())
-
+        
         if len(valid_config) == 0:
             return False
-
-        for i in valid_config:
-            for j in online_config:
-                i.remove(j)
-
-        best_obj = 0
-        best_config = None
-        for i in valid_config:
-            n = len(offline_jobs)
-            if n == 0 :
-                return True
-            
-            all_combinations = list(combinations(i, n))
-            for combo in all_combinations:
-                config = []
-                for z in combo:
-                    config.append(config_map.get(z))
-                throught =  self.Calculated_throughput(config, offline_jobs)
-                if throught > best_obj:
-                    best_config = config
-                    best_obj = throught
+        
 
         
         config_list = []
-        for i in jobs:
-            if isinstance(i, online_job):
-                config_list.append(config_map.get(online_config[online_jobs.index(i)]))
-            if isinstance(i, offline_job):
-                config_list.append(best_config[offline_jobs.index(i)])
+        for i in online_jobs:
+            config_list.append(config_map.get(online_config[online_jobs.index(i)]))
 
-        self.config_list[index] = config_list
+        for i in online_config:
+           for j in valid_config:
+               j.remove(i)
 
+        best_obj = 0
+        best_config = {}
+        best_concurrency  = {}
+        for i in valid_config:
+            
+            for j in range(0, len(concurrency_jobs)+1):
+                if j != 0:
+                    all_combinations = list(combinations(concurrency_jobs, j))
+                    if j > len(offline_jobs):
+                        continue
+                    for comb in all_combinations:
+                        all_permutations = list(permutations(offline_jobs, j))
+                        for perm in all_permutations:
+                            flag_valid = True
+                            tmp = offline_jobs.copy()
+                       
+                            throught = 0
+                            concurrency = {}
+                            for z in  range(0, j):
+                                
+                                index = online_jobs.index(comb[z])
+                                if self.Calculated_throughput_double(comb[z], perm[z], config_map.get(online_config[index])):
+                                    throught = throught +  self.Calculated_throughput_double(comb[z], perm[z], config_map.get(online_config[index]))
+                                    tmp.remove(perm[z])
+                                    concurrency[comb[z]] = perm[z]
+                                else:
+                                    flag_valid = False
+                                    break
+                           
+                            if flag_valid:
+                                all_combinations2 = list(permutations(i, len(tmp)))
+                                tmp_config = []
+                                tmp_throught = 0
+                                for combo2 in all_combinations2:
+                                    config = []
+                                   
+                                    for k in combo2:
+                                        config.append(config_map.get(k))
+                                    middle_throught =self.Calculated_throughput(config, tmp)
+                                    tmp_dic = {}
+                                    for k in range(0, len(tmp)):
+                                        tmp_dic[tmp[k]] = config[k]
+                                    if middle_throught > tmp_throught:
+                                        tmp_throught = middle_throught
+                                        tmp_config = tmp_dic
+
+                                   
+                                if throught + tmp_throught > best_obj:
+                                    best_config = tmp_config
+                                    best_obj = throught + tmp_throught
+                                    best_concurrency = concurrency
+                            else:
+                                continue
+                else:
+                    concurrency = {}
+                    throught = 0
+                    tmp = offline_jobs.copy()
+                    if len(tmp) > len(i):
+                        continue
+                    all_combinations2 = list(permutations(i, len(tmp)))
+                    for combo2 in all_combinations2:
+                        config = []
+                        for k in combo2:
+                            config.append(config_map.get(k))
+                        throught = self.Calculated_throughput(config, tmp) 
+                        tmp_dic = {}
+
+                        for k in range(0, len(tmp)):
+                            tmp_dic[tmp[k]] = config[k]
+
+                        config = tmp_dic
+                        if throught > best_obj:
+                            best_config = config
+                            best_obj = throught
+                            best_concurrency = concurrency
+
+        if best_obj == 0 :
+            return False
+        self.GPU_list[GPU_index]  = []
+        self.config_list[GPU_index] = []
+
+        for i in range(0, len(online_jobs)):
+            self.GPU_list[GPU_index].append([online_jobs[i]])
+            self.config_list[GPU_index].append(config_list[i])
+  
+        for i in best_concurrency.keys():
+            offline = best_concurrency.get(i)
+ 
+            self.GPU_list[GPU_index][online_jobs.index(i)].append(offline)
+
+        for i in best_config.keys():
+           
+            self.GPU_list[GPU_index].append([i])
+            self.config_list[GPU_index].append(best_config.get(i))
+        
+        # print(self.GPU_list[0])
+        # print(self.config_list[0])
         return True
-                
 
 
    
     def Calculated_throughput(self, config_list, jobs):
         throughput = 0
         global job_list
-
         for i in job_list:
+            
             for j in range(0, len(jobs)):
+
                 if jobs[j].model_name == i[0] and jobs[j].batch_Size == i[1] and config_list[j] == i[2]:
                     throughput = throughput + float(i[3])
     
@@ -165,19 +264,48 @@ class miso_sheduler:
     
 
     def state_change(self, GPU_index, job):
-        index = self.GPU_list[GPU_index].index(job)
-        self.GPU_list[GPU_index].remove(job)
-        del self.config_list[GPU_index][index]
+        for i in self.GPU_list[GPU_index]:
+            if job in i:
+                index = i.index(job)
+                if len(i) >= 2:
+                    i.remove(job)
+                else:
+                    self.GPU_list[GPU_index].remove(i)
+                
+                del self.config_list[GPU_index][index] 
+                break
 
-        if not self.online_job_queue.empty() and self.miso_cluster(self.online_job_queue.queue[0]):
+        
+        if not self.online_job_queue.empty() and self.I_cluster(self.online_job_queue.queue[0]):
             online_job = self.online_job_queue.get()
         else:
-            if not self.offline_job_queue.empty() and self.miso_cluster(self.offline_job_queue.queue[0]):
+            if not self.offline_job_queue.empty() and self.I_cluster(self.offline_job_queue.queue[0]):
                 offline_job = self.offline_job_queue.get()
+            else:
+                jobs = []
+                for i in self.GPU_list[GPU_index]:
+                    for j in i:
+                        jobs.append(j)
+                self.partition_optimizer(jobs, GPU_index)         
+
+
+
+    def check_percentage(self, online_job, config_id):
+        global online_job_list
+        config = config_map.get(config_id)
+        for i in online_job_list:
+            if i.model_name == online_job.model_name and int(i.batch_Size)== int(online_job.batch_Size) and i.config == config:
+                return float(i.tail)/float(online_job.qos)
             
+    def Calculated_throughput_double(self, online_job, offline_job, config):
+        return 0.2
 
 
-# test1  = online_job('resnet152', '16' , 80)
+
+                
+# for i in online_job_list:
+#     print(i)
+test1  = online_job('resnet152', '16' , 80)
 # # test1  = online_job('resnet152', '16' , 80)
 # test2  = offline_job('resnet152', '8' , 800)
 # # # test3  = offline_job('resnet50', '16' , 800)
@@ -185,11 +313,24 @@ class miso_sheduler:
 # jobs = [test1]
 # GPU_list = [[]]
 
-# test = miso_sheduler(GPU_list=GPU_list)
-
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# test.miso_cluster(offline_job('resnet152', '16' , 700))
+test = I_sheduler()
+# jobs = []
+# jobs.append(online_job('resnet152', '16' , 80))
+# jobs.append(online_job('resnet152', '16' , 80))
+# jobs.append(offline_job('resnet152', '16' , 7000))
+# jobs.append(offline_job('resnet152', '16' , 7000))
+# jobs.append(offline_job('resnet152', '16' , 7000))
+test.I_cluster(online_job('resnet152', '16' , 80))
+test.I_cluster(offline_job('resnet152', '16' , 7000))
+test.I_cluster(online_job('resnet152', '16' , 80))
+test.I_cluster(offline_job('resnet152', '16' , 7000))
+test.I_cluster(offline_job('resnet152', '16' , 7000))
+print(test.GPU_list[0])
+print(test.config_list[0])
+# test.partition_optimizer(jobs=jobs, GPU_index=0)
+# print(best_obj)
+# print(best_concurrency)
+# print(best_config)
 # for i in test.GPU_list[0]:
 #     print(i)
 # test.miso_cluster(offline_job('resnet50', '16' , 800))

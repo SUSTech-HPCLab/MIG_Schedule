@@ -52,7 +52,7 @@ class offline_job:
 
 
 class miso_sheduler:
-    def __init__(self, GPU_list = [], max_job_per_GPU=3):
+    def __init__(self, GPU_list = [], max_job_per_GPU=5):
         self.GPU_list = GPU_list
         self.config_list = []
         self.max_job_per_GPU = max_job_per_GPU
@@ -113,7 +113,7 @@ class miso_sheduler:
 
         for i in configs:
             valid = True
-            if len(i) >= len(online_jobs) + len(offline_jobs):
+            if len(i) >= len(online_jobs) + len(offline_jobs) - 2:
                 tmp = i.copy()
                 for j in online_config:
                     if j not in tmp:
@@ -138,7 +138,8 @@ class miso_sheduler:
             if n == 0 :
                 return True
             
-            all_combinations = list(combinations(i, n))
+            all_combinations = list(permutations(i, n))
+            
             for combo in all_combinations:
                 config = []
                 for z in combo:
@@ -148,17 +149,14 @@ class miso_sheduler:
                     best_config = config
                     best_obj = throught
 
-        
         config_list = []
         for i in jobs:
             if isinstance(i, online_job):
                 config_list.append(config_map.get(online_config[online_jobs.index(i)]))
             if isinstance(i, offline_job):
                 config_list.append(best_config[offline_jobs.index(i)])
-
         self.config_list[index] = config_list
-
-        return True
+        return best_obj
                 
 
 
@@ -170,7 +168,7 @@ class miso_sheduler:
         for i in job_list:
             for j in range(0, len(jobs)):
                 if jobs[j].model_name == i[0] and jobs[j].batch_Size == i[1] and config_list[j] == i[2]:
-                    throughput = throughput + float(i[3])
+                    throughput = throughput + float(i[3])                
     
 
         return throughput
@@ -203,53 +201,22 @@ class miso_sheduler:
         else:
             if not self.offline_job_queue.empty() and self.miso_cluster(self.offline_job_queue.queue[0]):
                 offline_job = self.offline_job_queue.get()
-            
+            else:
+                self.miso_partition_optimizer(self.GPU_list[GPU_index], GPU_index)
 
 
-# test1  = online_job('resnet152', '16' , 80)
-# # test1  = online_job('resnet152', '16' , 80)
-# test2  = offline_job('resnet152', '8' , 800)
-# # # test3  = offline_job('resnet50', '16' , 800)
-# # # test4 = offline_job("bert", "8", 800)
-# jobs = [test1]
-# GPU_list = [[]]
-
-# test = miso_sheduler(GPU_list=GPU_list)
-
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# test.miso_cluster(offline_job('resnet152', '16' , 700))
-# for i in test.GPU_list[0]:
-#     print(i)
-# test.miso_cluster(offline_job('resnet50', '16' , 800))
-# print(test.offline_job_queue.empty())
-# print(test.config_list)
-# test.state_change(0, test.GPU_list[0][2])
-# for i in test.GPU_list[0]:
-#     print(i)
-# print(test.config_list)
-
-# # test.miso_cluster(online_job('resnet152', '16' , 80))
-# # print(test.GPU_list)
-# # test.miso_cluster(online_job('resnet50', '16' , 80))
-# # print(test.GPU_list)
-# # test.miso_cluster(online_job('resnet152', '16' , 80))
-# # print(test.GPU_list)
-# test.miso_cluster(online_job('resnet50', '16' , 80))
-# # print(test.GPU_list)
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# test.miso_cluster(offline_job('resnet152', '16' , 80))
-# test.miso_cluster(offline_job('resnet152', '16' , 80))
-# print(test.GPU_list)
-# print(test.config_list)
-# test.miso_cluster(test2)
-# print(test.GPU_list)
-# test.miso_cluster(test4)
-# test.miso_cluster(test2)
-# test.miso_partition_optimizer(jobs)
-# print(test.best_fit(test1))
 
 
 
 
         
+
+# test = miso_sheduler()
+# jobs = []
+# jobs.append(online_job('resnet152', '16' , 80))
+# jobs.append(online_job('resnet152', '16' , 80))
+# jobs.append(offline_job('resnet152', '16' , 7000))
+# jobs.append(offline_job('resnet152', '16' , 7000))
+# jobs.append(offline_job('resnet152', '16' , 7000))
+# best_obj = test.miso_partition_optimizer(jobs=jobs, index=0)
+# print(best_obj)

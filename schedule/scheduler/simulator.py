@@ -68,16 +68,19 @@ class simulator:
                             job_list.append(z)
                             miso.state_change(i,z)
 
-                    for j in range(0, len(miso.GPU_list[i])):
-                        if isinstance(miso.GPU_list[i][j], online_job):
-                            continue
-                        
-                        if isinstance(miso.GPU_list[i][j], offline_job):
-                            if   miso.GPU_list[i][j].start_time == -1:
-                                miso.GPU_list[i][j].start_time = num
-                                self.caculate_completion_time(miso.GPU_list[i][j], miso.config_list[i][j])
 
+                        for j in range(0, len(miso.GPU_list[i])):
+                            if isinstance(miso.GPU_list[i][j], online_job):
+                                continue
+                        
+                            if isinstance(miso.GPU_list[i][j], offline_job):
+                                if  miso.GPU_list[i][j].start_time == -1:
+                                    miso.GPU_list[i][j].start_time = num
+                                self.caculate_completion_time(miso.GPU_list[i][j], miso.config_list[i][j])
+  
                 if len(job_list) == 4:
+                    for i in job_list:
+                        print(i)
                     break
             self.caculate_system_metrics(jobs=job_list)
             
@@ -128,4 +131,4 @@ offline_jobs.append(test3)
 offline_jobs.append(test4)
 offline_jobs.append(test5)
 
-test = simulator(GPU_num=5, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs)
+test = simulator(GPU_num=1, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs)
