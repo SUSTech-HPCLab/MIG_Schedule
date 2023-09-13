@@ -85,6 +85,7 @@ class simulator:
             num = 0
             job_list = []
             while True:
+                
                 num = num + 1
                 for i in range(0, len(miso.GPU_list)):
                     remove_jobs = []
@@ -109,7 +110,7 @@ class simulator:
                                 if  miso.GPU_list[i][j].start_time == -1:
                                     miso.GPU_list[i][j].start_time = num
                                 self.caculate_completion_time(miso.GPU_list[i][j], miso.config_list[i][j])
-  
+              
                 if len(job_list) == self.num:
                     for i in job_list:
                         print(i)
@@ -151,6 +152,7 @@ class simulator:
             while True:
                 num = num + 1
                 for i in range(0, len(scheduler.GPU_list)):
+                 
                     remove_jobs = []
                     for j in range(0, len(scheduler.GPU_list[i])):
                         if len(scheduler.GPU_list[i][j]) == 1:
@@ -172,8 +174,11 @@ class simulator:
                         for z in remove_jobs:
                             z.end_time = num
                             job_list.append(z)
+                         
                             scheduler.state_change(i,z)
+                     
 
+                        
                         for j in range(0, len(scheduler.GPU_list[i])):
                             if len(scheduler.GPU_list[i][j]) == 1:
                                 if isinstance(scheduler.GPU_list[i][j][0], online_job):
@@ -181,6 +186,7 @@ class simulator:
                                 if isinstance(scheduler.GPU_list[i][j][0], offline_job):
                                     if  scheduler.GPU_list[i][j][0].start_time == -1:
                                         scheduler.GPU_list[i][j][0].start_time = num
+                    
                                     self.caculate_completion_time(scheduler.GPU_list[i][j][0], scheduler.config_list[i][j])
                     
                             else:
@@ -192,7 +198,8 @@ class simulator:
                                     if  scheduler.GPU_list[i][j][0].start_time == -1:
                                         scheduler.GPU_list[i][j][0].start_time = num
                                     self.caculate_completion_time_concurrency(scheduler.GPU_list[i][j][0], scheduler.GPU_list[i][j][1], scheduler.config_list[i][j])
-  
+
+               
                 if len(job_list) == self.num:
                     for i in job_list:
                         print(i)
@@ -248,36 +255,16 @@ class simulator:
 offline_jobs = []
 online_jobs = []
 
-online_jobs.append(online_job('resnet152', '16' , 80))
-online_jobs.append(online_job('resnet50', '16' , 80))
-online_jobs.append(online_job('bert', '8' , 80))
-online_jobs.append(online_job('resnet50', '16' , 80))
 
-offline_jobs.append(offline_job('resnet152', '32' , 100000))
-offline_jobs.append(offline_job('resnet50', '32' , 100000))
-offline_jobs.append(offline_job('vgg16', '32' , 100000))
-offline_jobs.append(offline_job('bert', '32' , 100000))
+# online_jobs.append(online_job('resnet152', '16' , 50))
+online_jobs.append(online_job('resnet50', '32' , 49))
+online_jobs.append(online_job('bert', '8' , 90))
+# online_jobs.append(online_job('resnet50', '32' , 49))
 
-offline_jobs.append(offline_job('vgg16', '8' , 100000))
-offline_jobs.append(offline_job('vgg19', '16' , 100000))
-offline_jobs.append(offline_job('resnet50', '8' , 100000))
-offline_jobs.append(offline_job('resnet101', '32' , 100000))
-
-offline_jobs.append(offline_job('vgg16', '8' , 100000))
-offline_jobs.append(offline_job('vgg19', '16' , 100000))
-offline_jobs.append(offline_job('resnet50', '8' , 100000))
-offline_jobs.append(offline_job('resnet101', '32' , 100000))
-
-test = simulator(GPU_num=2, algorithm='me', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
-
-
-
-offline_jobs = []
-online_jobs = []
-online_jobs.append(online_job('resnet152', '16' , 80))
-online_jobs.append(online_job('resnet50', '16' , 80))
-online_jobs.append(online_job('bert', '8' , 80))
-online_jobs.append(online_job('resnet50', '16' , 80))
+# online_jobs.append(online_job('resnet152', '16' , 80))
+# online_jobs.append(online_job('resnet50', '16' , 80))
+# online_jobs.append(online_job('bert', '8' , 80))
+# online_jobs.append(online_job('resnet50', '16' , 80))
 
 offline_jobs.append(offline_job('resnet152', '32' , 100000))
 offline_jobs.append(offline_job('resnet50', '32' , 100000))
@@ -294,8 +281,148 @@ offline_jobs.append(offline_job('vgg19', '16' , 100000))
 offline_jobs.append(offline_job('resnet50', '8' , 100000))
 offline_jobs.append(offline_job('resnet101', '32' , 100000)) 
 
-test2 = simulator(GPU_num=2, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
 
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+test = simulator(GPU_num=2, algorithm='me', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
+
+
+
+offline_jobs = []
+online_jobs = []
+
+# online_jobs.append(online_job('resnet152', '16' , 80))
+# online_jobs.append(online_job('resnet50', '16' , 80))
+# online_jobs.append(online_job('bert', '8' , 80))
+# online_jobs.append(online_job('resnet50', '16' , 80))
+# online_jobs.append(online_job('resnet152', '16' , 50))
+online_jobs.append(online_job('resnet50', '32' , 49))
+online_jobs.append(online_job('bert', '8' , 90))
+# online_jobs.append(online_job('resnet50', '32' , 49))
+
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000)) 
+
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+
+offline_jobs.append(offline_job('resnet152', '32' , 100000))
+offline_jobs.append(offline_job('resnet50', '32' , 100000))
+offline_jobs.append(offline_job('vgg16', '32' , 100000))
+offline_jobs.append(offline_job('bert', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+
+offline_jobs.append(offline_job('vgg16', '8' , 100000))
+offline_jobs.append(offline_job('vgg19', '16' , 100000))
+offline_jobs.append(offline_job('resnet50', '8' , 100000))
+offline_jobs.append(offline_job('resnet101', '32' , 100000))
+test2 = simulator(GPU_num=2, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
 # offline_jobs = []
 # online_jobs = []
 # online_jobs.append(online_job('resnet152', '16' , 80))

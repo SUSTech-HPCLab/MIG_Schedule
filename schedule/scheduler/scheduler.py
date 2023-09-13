@@ -88,16 +88,19 @@ config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:
 reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
 
 class I_sheduler:
-    def __init__(self, GPU_list = [[]], max_job_per_GPU=5):
+    def __init__(self, GPU_list = [[]], max_job_per_GPU=20):
         self.GPU_list = GPU_list
         self.config_list = [[]]
         self.max_job_per_GPU = max_job_per_GPU
         self.online_job_queue = queue.Queue()
         self.offline_job_queue = queue.Queue()
+        self.throughput = []
 
         for i in range(0, len(GPU_list)):
             self.config_list.append([])
+            self.throughput.append(0)
 
+       
     def I_cluster(self, new_job):
         index,min = self.get_index_list(self.GPU_list)
         if min + 1 <= self.max_job_per_GPU:
@@ -108,11 +111,25 @@ class I_sheduler:
             jobs.append(new_job)
            
             if(not self.partition_optimizer(jobs, index)):
+
                 if isinstance(new_job, online_job):
                     self.online_job_queue.put(new_job)
                 else:
                     self.offline_job_queue.put(new_job)
                 return False
+            elif isinstance(new_job, offline_job):
+                throught_put = self.partition_optimizer(jobs, index)
+                if throught_put < self.throughput[index]:
+                 
+                    jobs.remove(new_job)
+                  
+                    self.partition_optimizer(jobs, index)
+                   
+                    self.offline_job_queue.put(new_job)
+                    return False
+                else:
+                 
+                    self.throughput[index] = throught_put
             return True
         
         else:
@@ -196,11 +213,12 @@ class I_sheduler:
             for i in range(0, len(online_jobs)):
                 self.GPU_list[GPU_index].append([online_jobs[i]])
                 self.config_list[GPU_index].append(config_list[i])
-            return True
+            return 0.0000001
 
         best_obj = 0
         best_config = {}
         best_concurrency  = {}
+
         for i in valid_config:
             
             for j in range(0, len(concurrency_jobs)+1):
@@ -277,6 +295,7 @@ class I_sheduler:
 
         if best_obj == 0 :
             return False
+
         self.GPU_list[GPU_index]  = []
         self.config_list[GPU_index] = []
 
@@ -293,7 +312,8 @@ class I_sheduler:
            
             self.GPU_list[GPU_index].append([i])
             self.config_list[GPU_index].append(best_config.get(i))
-        return True
+        # print(len(self.GPU_list[GPU_index]), len(self.config_list[GPU_index]))
+        return best_obj
 
 
    
@@ -332,26 +352,31 @@ class I_sheduler:
         for i in self.GPU_list[GPU_index]:
             if job in i:
                 index = i.index(job)
+             
                 if len(i) >= 2:
                     i.remove(job)
+
                 else:
                     self.GPU_list[GPU_index].remove(i)
-                
-                del self.config_list[GPU_index][index] 
+                    del self.config_list[GPU_index][index] 
+                 
                 break
+        jobs = []
+        for i in self.GPU_list[GPU_index]:
+            for j in i:
+                jobs.append(j)
+        self.throughput[GPU_index] = self.partition_optimizer(jobs, GPU_index)
 
-        
         if not self.online_job_queue.empty() and self.I_cluster(self.online_job_queue.queue[0]):
             online_job = self.online_job_queue.get()
         else:
             if not self.offline_job_queue.empty() and self.I_cluster(self.offline_job_queue.queue[0]):
                 offline_job = self.offline_job_queue.get()
-            else:
-                jobs = []
-                for i in self.GPU_list[GPU_index]:
-                    for j in i:
-                        jobs.append(j)
-                self.partition_optimizer(jobs, GPU_index)         
+                
+                
+              
+                
+                       
 
 
 
@@ -366,37 +391,45 @@ class I_sheduler:
             
     def Calculated_throughput_double(self, online_job: online_job, offline_job: offline_job, config):
         global qos_list, throught_list
+       
         for i in qos_list[config]:
-
+          
             if i[0] == online_job.model_name and int(i[1]) == int(online_job.batch_Size) and i[3] == offline_job.model_name and \
                 int(i[4]) == int(offline_job.batch_Size):
+           
                
                 if i[2] == 'error' or float(i[2]) >  float(online_job.qos) or i[5] == 'error':
                     return False
                 
+          
+                
             if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
                 int(i[4]) == int(online_job.batch_Size):
-                
+          
                 if i[5] == 'error' or float(i[5]) > float(online_job.qos) or i[2] == 'error':
                     return False
 
-
+      
+      
 
         base = 0 
         for i in online_job_list:
             if i.model_name == offline_job.model_name and int(i.batch_Size) == int(offline_job.batch_Size) and config == i.config:
                 base = float(i.average_time)
 
-
+  
         for i in throught_list[config]:
 
             if i[0] == online_job.model_name and int(i[1]) == int(online_job.batch_Size) and i[3] == offline_job.model_name and \
                 int(i[4]) == int(offline_job.batch_Size):
+               
                 return base/float(i[5])
                 
             if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
                 int(i[4]) == int(online_job.batch_Size):
+                
                 return base/float(i[2])
+        
             
 
 
