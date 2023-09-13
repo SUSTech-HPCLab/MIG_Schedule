@@ -2,6 +2,8 @@ import sys
 sys.path.append('/home/zbw/MIG/MIG_Schedule')
 import queue
 import util.util
+import re
+import glob
 
 from itertools import permutations
 from itertools import combinations
@@ -9,11 +11,67 @@ from schedule.scheduler.miso_scheduler import online_job, offline_job
 from jobs.profile.standardized_throughput import get_job_list
 
 
+dir = '/home/zbw/MIG/MIG_Schedule/jobs/profile/result/'
+qos_list = {}
+throught_list = {}
+
+file_list = glob.glob(dir + '2_*_online.txt')
+for file_name in file_list:
+    with open(file_name, 'r') as f:
+        file_name = file_name.replace("/home/zbw/MIG/MIG_Schedule/jobs/profile/result/", "")
+   
+        pattern = r'2_(.*?)_online\.txt'
+        match = re.match(pattern, file_name)
+        extracted_text = ''
+        if match:
+            extracted_text = match.group(1)
+        
+        qos_list[extracted_text] = []
+        num = 0
+        for line in f:
+            qos_list[extracted_text].append([])
+            line = line.strip()
+            qos_list[extracted_text][num].append(line.split(" ")[0])
+            qos_list[extracted_text][num].append(line.split(" ")[1])
+            qos_list[extracted_text][num].append(line.split(" ")[2])
+            qos_list[extracted_text][num].append(line.split(" ")[3])
+            qos_list[extracted_text][num].append(line.split(" ")[4])
+            qos_list[extracted_text][num].append(line.split(" ")[5])
+            num = num + 1
+    f.close()
+
+file_list = glob.glob(dir + '2_*.txt')
+for file_name in file_list:
+    with open(file_name, 'r') as f:
+        file_name = file_name.replace("/home/zbw/MIG/MIG_Schedule/jobs/profile/result/", "")
+       
+        pattern = r'2_(?!.*_online\.txt)(.*?)\.txt'
+        match = re.match(pattern, file_name)
+        extracted_text = ''
+        if match:
+            extracted_text = match.group(1)
+        else:
+            f.close()
+            continue
+    
+        throught_list[extracted_text] = []
+        num = 0
+        for line in f:
+            throught_list[extracted_text].append([])
+            line = line.strip()
+            throught_list[extracted_text][num].append(line.split(" ")[0])
+            throught_list[extracted_text][num].append(line.split(" ")[1])
+            throught_list[extracted_text][num].append(line.split(" ")[2])
+            throught_list[extracted_text][num].append(line.split(" ")[3])
+            throught_list[extracted_text][num].append(line.split(" ")[4])
+            throught_list[extracted_text][num].append(line.split(" ")[5])
+            num = num + 1
+    f.close()
+
+
 path = '/home/zbw/MIG/MIG_Schedule/jobs/profile/single_standardlized'
 job_list = []
 
-path2 = ''
-double_result = []
 with open(path, 'r') as f:
     for line in f:
         line = line.strip()
@@ -48,6 +106,7 @@ class I_sheduler:
                 for j in i:
                     jobs.append(j)
             jobs.append(new_job)
+           
             if(not self.partition_optimizer(jobs, index)):
                 if isinstance(new_job, online_job):
                     self.online_job_queue.put(new_job)
@@ -101,7 +160,7 @@ class I_sheduler:
         for i in range(0, len(online_jobs)):
             if self.check_percentage(online_jobs[i], online_config[i]) <= 0.7:
                 concurrency_jobs.append(online_jobs[i])
-            
+       
         configs = util.util.get_MIG_config()
         valid_config = []
        
@@ -122,7 +181,6 @@ class I_sheduler:
             return False
         
 
-        
         config_list = []
         for i in online_jobs:
             config_list.append(config_map.get(online_config[online_jobs.index(i)]))
@@ -130,6 +188,15 @@ class I_sheduler:
         for i in online_config:
            for j in valid_config:
                j.remove(i)
+        
+        if len(offline_jobs) == 0:
+            self.GPU_list[GPU_index]  = []
+            self.config_list[GPU_index] = []
+
+            for i in range(0, len(online_jobs)):
+                self.GPU_list[GPU_index].append([online_jobs[i]])
+                self.config_list[GPU_index].append(config_list[i])
+            return True
 
         best_obj = 0
         best_config = {}
@@ -154,6 +221,7 @@ class I_sheduler:
                                 index = online_jobs.index(comb[z])
                                 if self.Calculated_throughput_double(comb[z], perm[z], config_map.get(online_config[index])):
                                     throught = throught +  self.Calculated_throughput_double(comb[z], perm[z], config_map.get(online_config[index]))
+
                                     tmp.remove(perm[z])
                                     concurrency[comb[z]] = perm[z]
                                 else:
@@ -225,9 +293,6 @@ class I_sheduler:
            
             self.GPU_list[GPU_index].append([i])
             self.config_list[GPU_index].append(best_config.get(i))
-        
-        # print(self.GPU_list[0])
-        # print(self.config_list[0])
         return True
 
 
@@ -297,69 +362,57 @@ class I_sheduler:
             if i.model_name == online_job.model_name and int(i.batch_Size)== int(online_job.batch_Size) and i.config == config:
                 return float(i.tail)/float(online_job.qos)
             
-    def Calculated_throughput_double(self, online_job, offline_job, config):
-        return 0.2
+    def Calculated_throughput_double(self, online_job: online_job, offline_job: offline_job, config):
+        global qos_list, throught_list
+        for i in qos_list[config]:
 
-
-
+            if i[0] == online_job.model_name and int(i[1]) == int(online_job.batch_Size) and i[3] == offline_job.model_name and \
+                int(i[4]) == int(offline_job.batch_Size):
+               
+                if i[2] == 'error' or float(i[2]) >  float(online_job.qos) or i[5] == 'error':
+                    return False
                 
-# for i in online_job_list:
-#     print(i)
-test1  = online_job('resnet152', '16' , 80)
-# # test1  = online_job('resnet152', '16' , 80)
-# test2  = offline_job('resnet152', '8' , 800)
-# # # test3  = offline_job('resnet50', '16' , 800)
-# # # test4 = offline_job("bert", "8", 800)
-# jobs = [test1]
-# GPU_list = [[]]
+            if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
+                int(i[4]) == int(online_job.batch_Size):
+                
+                if i[5] == 'error' or float(i[5]) > float(online_job.qos) or i[2] == 'error':
+                    return False
 
-test = I_sheduler()
-# jobs = []
-# jobs.append(online_job('resnet152', '16' , 80))
-# jobs.append(online_job('resnet152', '16' , 80))
-# jobs.append(offline_job('resnet152', '16' , 7000))
-# jobs.append(offline_job('resnet152', '16' , 7000))
-# jobs.append(offline_job('resnet152', '16' , 7000))
-test.I_cluster(online_job('resnet152', '16' , 80))
-test.I_cluster(offline_job('resnet152', '16' , 7000))
-test.I_cluster(online_job('resnet152', '16' , 80))
-test.I_cluster(offline_job('resnet152', '16' , 7000))
-test.I_cluster(offline_job('resnet152', '16' , 7000))
-print(test.GPU_list[0])
-print(test.config_list[0])
-# test.partition_optimizer(jobs=jobs, GPU_index=0)
-# print(best_obj)
-# print(best_concurrency)
-# print(best_config)
-# for i in test.GPU_list[0]:
-#     print(i)
-# test.miso_cluster(offline_job('resnet50', '16' , 800))
-# print(test.offline_job_queue.empty())
-# print(test.config_list)
-# test.state_change(0, test.GPU_list[0][2])
-# for i in test.GPU_list[0]:
-#     print(i)
-# print(test.config_list)
 
-# # test.miso_cluster(online_job('resnet152', '16' , 80))
-# # print(test.GPU_list)
-# # test.miso_cluster(online_job('resnet50', '16' , 80))
-# # print(test.GPU_list)
-# # test.miso_cluster(online_job('resnet152', '16' , 80))
-# # print(test.GPU_list)
-# test.miso_cluster(online_job('resnet50', '16' , 80))
-# # print(test.GPU_list)
-# test.miso_cluster(online_job('resnet152', '16' , 80))
-# test.miso_cluster(offline_job('resnet152', '16' , 80))
-# test.miso_cluster(offline_job('resnet152', '16' , 80))
-# print(test.GPU_list)
-# print(test.config_list)
-# test.miso_cluster(test2)
-# print(test.GPU_list)
-# test.miso_cluster(test4)
-# test.miso_cluster(test2)
-# test.miso_partition_optimizer(jobs)
-# print(test.best_fit(test1))
+
+        base = 0 
+        for i in online_job_list:
+            if i.model_name == offline_job.model_name and int(i.batch_Size) == int(offline_job.batch_Size) and config == i.config:
+                base = float(i.average_time)
+
+
+        for i in throught_list[config]:
+
+            if i[0] == online_job.model_name and int(i[1]) == int(online_job.batch_Size) and i[3] == offline_job.model_name and \
+                int(i[4]) == int(offline_job.batch_Size):
+                return base/float(i[5])
+                
+            if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
+                int(i[4]) == int(online_job.batch_Size):
+                return base/float(i[2])
+            
+
+
+        return False
+
+
+
+
+# test = I_sheduler()
+
+# test.I_cluster(online_job('resnet152', '16' , 80))
+# test.I_cluster(offline_job('resnet152', '32' , 7000))
+# test.I_cluster(online_job('resnet152', '8' , 80))
+
+# test.I_cluster(offline_job('bert', '8' , 7000))
+# test.I_cluster(offline_job('unet', '16' , 7000))
+
+
 
 
 
