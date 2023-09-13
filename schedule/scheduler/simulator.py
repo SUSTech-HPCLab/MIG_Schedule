@@ -207,8 +207,16 @@ class simulator:
                 offline_job.speed = 1000/float(i.average_time)
                 break
     
-    def caculate_completion_time_concurrency(self, offline_job, online_job, config):
-        pass
+    def caculate_completion_time_concurrency(self, offline_job:offline_job, online_job:online_job, config):
+        for i in throught_list[config]:
+
+            if i[0] == online_job.model_name and int(i[1]) == int(online_job.batch_Size) and i[3] == offline_job.model_name and \
+                int(i[4]) == int(offline_job.batch_Size):
+                offline_job.speed = 1000/float(i[5])
+                
+            if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
+                int(i[4]) == int(online_job.batch_Size):
+                offline_job.speed =  1000/float(i[2])
 
     def caculate_system_metrics(self, jobs):
         avarage_queue_time = 0
@@ -239,7 +247,10 @@ class simulator:
 
 offline_jobs = []
 online_jobs = []
+
 online_jobs.append(online_job('resnet152', '16' , 80))
+online_jobs.append(online_job('resnet50', '16' , 80))
+online_jobs.append(online_job('bert', '8' , 80))
 online_jobs.append(online_job('resnet50', '16' , 80))
 
 offline_jobs.append(offline_job('resnet152', '32' , 100000))
@@ -257,13 +268,15 @@ offline_jobs.append(offline_job('vgg19', '16' , 100000))
 offline_jobs.append(offline_job('resnet50', '8' , 100000))
 offline_jobs.append(offline_job('resnet101', '32' , 100000))
 
-test = simulator(GPU_num=1, algorithm='me', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
+test = simulator(GPU_num=2, algorithm='me', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
 
 
 
 offline_jobs = []
 online_jobs = []
 online_jobs.append(online_job('resnet152', '16' , 80))
+online_jobs.append(online_job('resnet50', '16' , 80))
+online_jobs.append(online_job('bert', '8' , 80))
 online_jobs.append(online_job('resnet50', '16' , 80))
 
 offline_jobs.append(offline_job('resnet152', '32' , 100000))
@@ -281,7 +294,7 @@ offline_jobs.append(offline_job('vgg19', '16' , 100000))
 offline_jobs.append(offline_job('resnet50', '8' , 100000))
 offline_jobs.append(offline_job('resnet101', '32' , 100000)) 
 
-test2 = simulator(GPU_num=1, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
+test2 = simulator(GPU_num=2, algorithm='miso', online_jobs= online_jobs, offline_jobs=offline_jobs, num=len(offline_jobs))
 
 # offline_jobs = []
 # online_jobs = []

@@ -113,7 +113,7 @@ class miso_sheduler:
 
         for i in configs:
             valid = True
-            if len(i) >= len(online_jobs) + len(offline_jobs) - 2:
+            if len(i) >= len(online_jobs) + len(offline_jobs):
                 tmp = i.copy()
                 for j in online_config:
                     if j not in tmp:
@@ -131,6 +131,7 @@ class miso_sheduler:
             for j in online_config:
                 i.remove(j)
 
+        
         best_obj = 0
         best_config = None
         for i in valid_config:
@@ -150,6 +151,7 @@ class miso_sheduler:
                     best_obj = throught
 
         config_list = []
+        
         for i in jobs:
             if isinstance(i, online_job):
                 config_list.append(config_map.get(online_config[online_jobs.index(i)]))

@@ -359,8 +359,10 @@ class I_sheduler:
         global online_job_list
         config = config_map.get(config_id)
         for i in online_job_list:
+
             if i.model_name == online_job.model_name and int(i.batch_Size)== int(online_job.batch_Size) and i.config == config:
                 return float(i.tail)/float(online_job.qos)
+        
             
     def Calculated_throughput_double(self, online_job: online_job, offline_job: offline_job, config):
         global qos_list, throught_list
