@@ -156,13 +156,15 @@ class miso_sheduler:
             
             for combo in all_combinations:
                 config = []
+               
                 for z in combo:
                     config.append(config_map.get(z))
                 throught =  self.Calculated_throughput(config, offline_jobs)
+                
                 if throught > best_obj:
                     best_config = config
                     best_obj = throught
-
+        # print(best_obj, best_config)
         config_list = []
         
         for i in jobs:
@@ -180,13 +182,15 @@ class miso_sheduler:
     def Calculated_throughput(self, config_list, jobs):
         throughput = 0
         global job_list
-
+        
         for i in job_list:
             for j in range(0, len(jobs)):
-                if jobs[j].model_name == i[0] and jobs[j].batch_Size == i[1] and config_list[j] == i[2]:
+             
+                if jobs[j].model_name == i[0] and int(jobs[j].batch_Size) == int(i[1]) and config_list[j] == i[2]:
+                    
                     throughput = throughput + float(i[3])                
     
-
+        
         return throughput
     
     def best_fit(self, online_job):

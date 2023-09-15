@@ -88,7 +88,7 @@ config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:
 reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
 
 class I_sheduler:
-    def __init__(self, GPU_list = [[]], max_job_per_GPU=20):
+    def __init__(self, GPU_list = [[]], max_job_per_GPU=7):
         self.GPU_list = GPU_list
         self.config_list = [[]]
         self.max_job_per_GPU = max_job_per_GPU
@@ -177,7 +177,7 @@ class I_sheduler:
         for i in range(0, len(online_jobs)):
             if self.check_percentage(online_jobs[i], online_config[i]) <= 0.7:
                 concurrency_jobs.append(online_jobs[i])
-       
+        
         configs = util.util.get_MIG_config()
         valid_config = []
        
@@ -307,7 +307,7 @@ class I_sheduler:
             offline = best_concurrency.get(i)
  
             self.GPU_list[GPU_index][online_jobs.index(i)].append(offline)
-
+       
         for i in best_config.keys():
            
             self.GPU_list[GPU_index].append([i])
@@ -324,13 +324,14 @@ class I_sheduler:
             
             for j in range(0, len(jobs)):
 
-                if jobs[j].model_name == i[0] and jobs[j].batch_Size == i[1] and config_list[j] == i[2]:
+                if jobs[j].model_name == i[0] and int(jobs[j].batch_Size) == int(i[1]) and config_list[j] == i[2]:
                     throughput = throughput + float(i[3])
     
 
         return throughput
     
     def best_fit(self, online_job):
+     
         global online_job_list
         MIG_partition_list = []
         for i in online_job_list:
@@ -414,20 +415,23 @@ class I_sheduler:
 
         base = 0 
         for i in online_job_list:
-            if i.model_name == offline_job.model_name and int(i.batch_Size) == int(offline_job.batch_Size) and config == i.config:
+         
+            if i.model_name == offline_job.model_name and int(i.batch_Size) == int(offline_job.batch_Size) and i.config == '1c-7g-80gb':
                 base = float(i.average_time)
-
-  
+                break
+     
         for i in throught_list[config]:
 
             if i[0] == online_job.model_name and int(i[1]) == int(online_job.batch_Size) and i[3] == offline_job.model_name and \
                 int(i[4]) == int(offline_job.batch_Size):
+         
                
                 return base/float(i[5])
                 
             if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
                 int(i[4]) == int(online_job.batch_Size):
-                
+          
+               
                 return base/float(i[2])
         
             
