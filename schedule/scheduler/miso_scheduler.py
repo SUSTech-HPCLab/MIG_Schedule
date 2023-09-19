@@ -54,14 +54,14 @@ class offline_job:
 
 
 class miso_sheduler:
-    def __init__(self, GPU_list = [], max_job_per_GPU=7):
+    def __init__(self, GPU_list = [], max_job_per_GPU=7, cluster_algorithm='number_of_job'):
         self.GPU_list = GPU_list
         self.config_list = []
         self.max_job_per_GPU = max_job_per_GPU
         self.online_job_queue = queue.Queue()
         self.offline_job_queue = queue.Queue()
         self.throughput = []
-
+        self.cluster_algorithm = cluster_algorithm
         for i in range(0, len(GPU_list)):
             self.config_list.append([])
             self.throughput.append(0)
@@ -69,28 +69,28 @@ class miso_sheduler:
 
     def miso_cluster(self, new_job):
 
-        index_list = self.get_index_list(self.GPU_list)
-        job_num = len(self.GPU_list[index_list[0]])
+        index = self.get_index_list(self.GPU_list)
+        job_num = len(self.GPU_list[index])
         if job_num + 1 <= self.max_job_per_GPU:
           
-            self.GPU_list[index_list[0]].append(new_job)
+            self.GPU_list[index].append(new_job)
            
-            if(not self.miso_partition_optimizer(self.GPU_list[index_list[0]], index_list[0])):
-                self.GPU_list[index_list[0]].remove(new_job)
+            if(not self.miso_partition_optimizer(self.GPU_list[index], index)):
+                self.GPU_list[index].remove(new_job)
                 if isinstance(new_job, online_job):
                     self.online_job_queue.put(new_job)
                 else:
                     self.offline_job_queue.put(new_job)
                 return False
             elif isinstance(new_job, offline_job):
-                throught_put = self.miso_partition_optimizer(self.GPU_list[index_list[0]], index_list[0])
-                if throught_put < self.throughput[index_list[0]]:
-                    self.GPU_list[index_list[0]].remove(new_job)
-                    self.miso_partition_optimizer(self.GPU_list[index_list[0]], index_list[0])
+                throught_put = self.miso_partition_optimizer(self.GPU_list[index], index)
+                if throught_put < self.throughput[index]:
+                    self.GPU_list[index].remove(new_job)
+                    self.miso_partition_optimizer(self.GPU_list[index], index)
                     self.offline_job_queue.put(new_job)
                     return False
                 else:
-                    self.throughput[index_list[0]] = throught_put
+                    self.throughput[index] = throught_put
             
             return True
         
@@ -103,8 +103,90 @@ class miso_sheduler:
             
 
     def get_index_list(self, GPU_list):
-        sorted_indices = sorted(range(len(GPU_list)), key=lambda i: len(GPU_list[i]))
-        return sorted_indices
+        
+            
+        if self.cluster_algorithm == 'number_of_job':
+            sorted_indices = sorted(range(len(GPU_list)), key=lambda i: len(GPU_list[i]))
+            return sorted_indices[0]
+        
+        if self.cluster_algorithm == 'number_of_resource':
+            resource_list = []
+            for i in self.config_list:
+                resource = 7
+                for j in i: 
+                    config_id = reverser_map.get(j)
+                    resource = resource - config_id
+                resource_list.append(resource)
+            
+            max_value = max(resource_list)
+            max_index = resource_list.index(max_value) 
+            return max_index
+        
+        if self.cluster_algorithm == 'number_of_job_with_resource':
+            num_list = []
+            for i in range(0, len(self.GPU_list)):
+                num = 0
+                for j in self.GPU_list[i]:
+                    num = num + 1
+                num_list.append(num)
+
+            min_value = min(num_list)
+
+            GPUs = []
+            for i in range(0, len(num_list)):
+                if min_value == num_list[i]:
+                    GPUs.append(i)
+            
+            for i in GPUs:
+                num_resource_list = []
+                resource = 7
+                for j in self.config_list[i]:
+                    config_id = reverser_map.get(j)
+                    resource = resource - config_id
+
+                num_resource_list.append(resource)
+
+            max_value = max(num_resource_list) 
+            max_index = num_resource_list.index(max_value) 
+            max_index = GPUs[max_index]
+        
+            return max_index
+        
+        if self.cluster_algorithm == 'number_of_resource_with_job':
+            resource_list = []
+       
+            for i in self.config_list:
+                resource = 7
+                for j in i:
+                    config_id = reverser_map.get(j)
+                    resource = resource - config_id
+                resource_list.append(resource)
+            
+            max_value = max(resource_list)
+
+            GPUs = []
+            for i in range(0, len(resource_list)):
+                if max_value == resource_list[i]:
+                    GPUs.append(i)
+            
+            for i in GPUs:
+                num_job_list = []
+                num = 0
+                for j in self.GPU_list[i]:
+                    num = num + 1
+                num_job_list.append(num)
+
+            min_value = min(num_job_list) 
+            min_index = num_job_list.index(min_value) 
+            min_index = GPUs[min_index]
+     
+         
+            return min_index
+    
+            
+
+
+
     
     
     def miso_partition_optimizer(self, jobs, index):
@@ -152,6 +234,13 @@ class miso_sheduler:
         for i in valid_config:
             n = len(offline_jobs)
             if n == 0 :
+                config_list = []
+                for i in jobs:
+                    if isinstance(i, online_job):
+                        config_list.append(config_map.get(online_config[online_jobs.index(i)]))
+                    if isinstance(i, offline_job):
+                        config_list.append(best_config[offline_jobs.index(i)])
+                self.config_list[index] = config_list
                 return 0.0000001
             
             all_combinations = list(permutations(i, n))
@@ -234,4 +323,5 @@ class miso_sheduler:
                 offline_job = self.offline_job_queue.get()
                 result = self.miso_cluster(offline_job)
    
-              
+
+

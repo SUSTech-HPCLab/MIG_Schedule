@@ -88,17 +88,19 @@ config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:
 reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
 
 class I_sheduler:
-    def __init__(self, GPU_list = [[]], max_job_per_GPU=7):
+    def __init__(self, GPU_list = [[]], max_job_per_GPU=7, cluster_algorithm='number_of_job'):
         self.GPU_list = GPU_list
-        self.config_list = [[]]
+        self.config_list = []
         self.max_job_per_GPU = max_job_per_GPU
         self.online_job_queue = queue.Queue()
         self.offline_job_queue = queue.Queue()
         self.throughput = []
+        self.cluster_algorithm = cluster_algorithm
 
         for i in range(0, len(GPU_list)):
             self.config_list.append([])
             self.throughput.append(0)
+       
 
        
     def I_cluster(self, new_job):
@@ -143,18 +145,112 @@ class I_sheduler:
             
 
     def get_index_list(self, GPU_list):
-        min = 9999
-        index = 0
-        for i in GPU_list:
-            num = 0 
-            for j in i:
-                for z in j:
-                    num = num + 1
+        if self.cluster_algorithm == 'number_of_job':
+            min_num = 9999
+            index = 0
+            for i in GPU_list:
+                num = 0 
+                for j in i:
+                    for z in j:
+                        num = num + 1
             
-            if num < min:
-                min = num 
-                index = GPU_list.index(i)
-        return index,min
+                if num < min_num:
+                    min_num = num 
+                    index = GPU_list.index(i)
+            return index,min_num
+        
+        if self.cluster_algorithm == 'number_of_job_with_resource':
+            num_list = []
+            for i in range(0, len(self.GPU_list)):
+                num = 0
+                for j in self.GPU_list[i]:
+                    for z in j :
+                        num = num + 1
+                num_list.append(num)
+
+            min_value = min(num_list)
+
+            GPUs = []
+            for i in range(0, len(num_list)):
+                if min_value == num_list[i]:
+                    GPUs.append(i)
+            
+            for i in GPUs:
+                num_resource_list = []
+                resource = 7
+                for j in self.config_list[i]:
+                    config_id = reverser_map.get(j)
+                    resource = resource - config_id
+
+                num_resource_list.append(resource)
+
+            max_value = max(num_resource_list) 
+            max_index = num_resource_list.index(max_value) 
+            max_index = GPUs[max_index]
+     
+            min_num = 0
+            for i in self.GPU_list[max_index]:
+                for j in i:
+                    min_num = min_num + 1
+            
+            return max_index, min_num
+            
+
+
+        if self.cluster_algorithm == 'number_of_resource':
+            resource_list = []
+       
+            for i in self.config_list:
+                resource = 7
+                for j in i:
+                    config_id = reverser_map.get(j)
+                    resource = resource - config_id
+                resource_list.append(resource)
+            
+            max_value = max(resource_list)
+            max_index = resource_list.index(max_value) 
+     
+            min_num = 0
+            for i in self.GPU_list[max_index]:
+                for j in i:
+                    min_num = min_num + 1
+            return max_index, min_num
+        
+        if self.cluster_algorithm == 'number_of_resource_with_job':
+            resource_list = []
+       
+            for i in self.config_list:
+                resource = 7
+                for j in i:
+                    config_id = reverser_map.get(j)
+                    resource = resource - config_id
+                resource_list.append(resource)
+            
+            max_value = max(resource_list)
+
+            GPUs = []
+            for i in range(0, len(resource_list)):
+                if max_value == resource_list[i]:
+                    GPUs.append(i)
+            
+            for i in GPUs:
+                num_job_list = []
+                num = 0
+                for j in self.GPU_list[i]:
+                    for z in j:
+                        num = num+1
+                num_job_list.append(num)
+
+            min_value = min(num_job_list) 
+            min_index = num_job_list.index(min_value) 
+            min_index = GPUs[min_index]
+     
+            min_num = 0
+            for i in self.GPU_list[min_index]:
+                for j in i:
+                    min_num = min_num + 1
+         
+            return min_index, min_num
     
     
     
@@ -294,7 +390,6 @@ class I_sheduler:
                         config = tmp_dic
                         if throught > best_obj:
                             best_config = config
-                            # print(best_config)
                             best_obj = throught
                             best_concurrency = concurrency
 
@@ -317,7 +412,6 @@ class I_sheduler:
            
             self.GPU_list[GPU_index].append([i])
             self.config_list[GPU_index].append(best_config.get(i))
-        # print(len(self.GPU_list[GPU_index]), len(self.config_list[GPU_index]))
         return best_obj
 
 
@@ -406,7 +500,6 @@ class I_sheduler:
     def check_percentage(self, online_job, config_id):
         global online_job_list
         config = config_map.get(config_id)
-        # print(online_job.model_name, online_job.batch_Size, config_id)
         for i in online_job_list:
 
             if i.model_name == online_job.model_name and int(i.batch_Size)== int(online_job.batch_Size) and i.config == config:
@@ -465,14 +558,7 @@ class I_sheduler:
 
 
 
-# test = I_sheduler()
 
-# test.I_cluster(online_job('resnet152', '16' , 80))
-# test.I_cluster(offline_job('resnet152', '32' , 7000))
-# test.I_cluster(online_job('resnet152', '8' , 80))
-
-# test.I_cluster(offline_job('bert', '8' , 7000))
-# test.I_cluster(offline_job('unet', '16' , 7000))
 
 
 
