@@ -68,11 +68,11 @@ class simulator:
 
             miso = miso_sheduler(GPU_list= GPU_list)
             for i in self.online_jobs:
-               miso.miso_cluster(i)
-
+                miso.miso_cluster(i)
             for j in self.offline_jobs:
                 if  miso.miso_cluster(j):
                     j.start_time = 0 
+            
        
             for i in range(0, len(miso.GPU_list)):
                 jobs = miso.GPU_list[i]
@@ -296,9 +296,9 @@ def online_job_generator(num):
     return online_job_list
 
 
-gpu_num = 32
-offline_jobs = offline_job_generator(200)
-online_jobs = online_job_generator(36)
+gpu_num = 2
+offline_jobs = offline_job_generator(20)
+online_jobs = online_job_generator(2)
 
 test = simulator(GPU_num=gpu_num, algorithm='miso', online_jobs= copy.deepcopy(online_jobs), offline_jobs=copy.deepcopy(offline_jobs), num=len(offline_jobs))
 

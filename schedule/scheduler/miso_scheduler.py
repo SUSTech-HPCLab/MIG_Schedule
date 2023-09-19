@@ -50,7 +50,7 @@ class offline_job:
         
     
     def __str__(self):
-        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size} Start_time: {self.start_time}, End_time: {self.end_time} speed: {self.speed} ID: {self.random}"
+        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size} Start_time: {self.start_time}, End_time: {self.end_time} speed: {self.speed}"
 
 
 class miso_sheduler:
@@ -88,6 +88,7 @@ class miso_sheduler:
                     self.GPU_list[index_list[0]].remove(new_job)
                     self.miso_partition_optimizer(self.GPU_list[index_list[0]], index_list[0])
                     self.offline_job_queue.put(new_job)
+                    return False
                 else:
                     self.throughput[index_list[0]] = throught_put
             
@@ -165,7 +166,7 @@ class miso_sheduler:
                 if throught > best_obj:
                     best_config = config
                     best_obj = throught
-        # print(best_obj, best_config)
+                    
         config_list = []
         
         for i in jobs:
@@ -234,20 +235,3 @@ class miso_sheduler:
                 result = self.miso_cluster(offline_job)
    
               
-
-
-
-
-
-
-        
-
-# test = miso_sheduler()
-# jobs = []
-# jobs.append(online_job('resnet152', '16' , 80))
-# jobs.append(online_job('resnet152', '16' , 80))
-# jobs.append(offline_job('resnet152', '16' , 7000))
-# jobs.append(offline_job('resnet152', '16' , 7000))
-# jobs.append(offline_job('resnet152', '16' , 7000))
-# best_obj = test.miso_partition_optimizer(jobs=jobs, index=0)
-# print(best_obj)
