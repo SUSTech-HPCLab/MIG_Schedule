@@ -12,9 +12,8 @@ from jobs.profile.standardized_throughput import get_job_list
 
 
 
+random.seed(60)
 
-
-test =  I_sheduler()
 job_list = get_job_list()
 dir = '/home/zbw/MIG/MIG_Schedule/jobs/profile/result/'
 throught_list = {}
@@ -74,7 +73,7 @@ class simulator:
             for j in self.offline_jobs:
                 if  miso.miso_cluster(j):
                     j.start_time = 0 
-
+       
             for i in range(0, len(miso.GPU_list)):
                 jobs = miso.GPU_list[i]
                 configs = miso.config_list[i]
@@ -87,16 +86,17 @@ class simulator:
                     if isinstance(jobs[j], offline_job):
                         self.caculate_completion_time(jobs[j], configs[j])
             
-
+       
             num = 0
             job_list = []
             while True:
-                
+                # print(num)
                 num = num + 1
                 for i in range(0, len(miso.GPU_list)):
                     remove_jobs = []
                     for j in range(0, len(miso.GPU_list[i])):
                         if isinstance(miso.GPU_list[i][j], offline_job):
+                           
                            miso.GPU_list[i][j].progress = miso.GPU_list[i][j].progress + miso.GPU_list[i][j].speed
                            if miso.GPU_list[i][j].progress >= miso.GPU_list[i][j].epoch:
                                remove_jobs.append(miso.GPU_list[i][j])
@@ -107,16 +107,15 @@ class simulator:
                             job_list.append(z)
                             miso.state_change(i,z)
 
-
-                        for j in range(0, len(miso.GPU_list[i])):
-                            if isinstance(miso.GPU_list[i][j], online_job):
-                                continue
-                        
-                            if isinstance(miso.GPU_list[i][j], offline_job):
-                                if  miso.GPU_list[i][j].start_time == -1:
-                                    miso.GPU_list[i][j].start_time = num
-                                self.caculate_completion_time(miso.GPU_list[i][j], miso.config_list[i][j])
-              
+                        for j in range(0, len(miso.GPU_list)):
+                            for z in range(0, len(miso.GPU_list[j])):
+                                if isinstance(miso.GPU_list[j][z], online_job):
+                                    continue
+                                if isinstance(miso.GPU_list[j][z], offline_job):
+                                    if  miso.GPU_list[j][z].start_time == -1:
+                                        miso.GPU_list[j][z].start_time = num
+                                    self.caculate_completion_time(miso.GPU_list[j][z], miso.config_list[j][z])
+                # print(len(job_list))
                 if len(job_list) == self.num:
                     # for i in job_list:
                     #     print(i)
@@ -155,8 +154,11 @@ class simulator:
 
             num = 0
             job_list = []
+          
+
             while True:
                 num = num + 1
+              
                 for i in range(0, len(scheduler.GPU_list)):
                  
                     remove_jobs = []
@@ -178,34 +180,35 @@ class simulator:
 
                     if len(remove_jobs) != 0:
                         for z in remove_jobs:
+                           
                             z.end_time = num
                             job_list.append(z)
                          
                             scheduler.state_change(i,z)
                      
 
+                        for j in range(0, len(scheduler.GPU_list)):
                         
-                        for j in range(0, len(scheduler.GPU_list[i])):
-                            if len(scheduler.GPU_list[i][j]) == 1:
-                                if isinstance(scheduler.GPU_list[i][j][0], online_job):
-                                    continue
-                                if isinstance(scheduler.GPU_list[i][j][0], offline_job):
-                                    if  scheduler.GPU_list[i][j][0].start_time == -1:
-                                        scheduler.GPU_list[i][j][0].start_time = num
+                            for z in range(0, len(scheduler.GPU_list[j])):
+                                if len(scheduler.GPU_list[j][z]) == 1:
+                                    if isinstance(scheduler.GPU_list[j][z][0], online_job):
+                                        continue
+                                    if isinstance(scheduler.GPU_list[j][z][0], offline_job):
+                                        if  scheduler.GPU_list[j][z][0].start_time == -1:
+                                            scheduler.GPU_list[j][z][0].start_time = num
                     
-                                    self.caculate_completion_time(scheduler.GPU_list[i][j][0], scheduler.config_list[i][j])
+                                        self.caculate_completion_time(scheduler.GPU_list[j][z][0], scheduler.config_list[j][z])
                     
-                            else:
-                                if isinstance(scheduler.GPU_list[i][j][0], online_job):
-                                    if  scheduler.GPU_list[i][j][1].start_time == -1:
-                                        scheduler.GPU_list[i][j][1].start_time = num
-                                    self.caculate_completion_time_concurrency(scheduler.GPU_list[i][j][1], scheduler.GPU_list[i][j][0], scheduler.config_list[i][j])
                                 else:
-                                    if  scheduler.GPU_list[i][j][0].start_time == -1:
-                                        scheduler.GPU_list[i][j][0].start_time = num
-                                    self.caculate_completion_time_concurrency(scheduler.GPU_list[i][j][0], scheduler.GPU_list[i][j][1], scheduler.config_list[i][j])
+                                    if isinstance(scheduler.GPU_list[j][z][0], online_job):
+                                        if  scheduler.GPU_list[j][z][1].start_time == -1:
+                                            scheduler.GPU_list[j][z][1].start_time = num
+                                        self.caculate_completion_time_concurrency(scheduler.GPU_list[j][z][1], scheduler.GPU_list[j][z][0], scheduler.config_list[j][z])
+                                    else:
+                                        if  scheduler.GPU_list[j][z][0].start_time == -1:
+                                            scheduler.GPU_list[j][z][0].start_time = num
+                                        self.caculate_completion_time_concurrency(scheduler.GPU_list[j][z][0], scheduler.GPU_list[j][z][1], scheduler.config_list[j][z])
 
-               
                 if len(job_list) == self.num:
                     # for i in job_list:
                     #     print(i)
@@ -255,13 +258,13 @@ class simulator:
 
 
 
-
 def offline_job_generator(num):
     job_list = ['alexnet', 'bert', 'deeplabv3', 'inception_v3', 'mobilenet_v2', 'resnet50', 'resnet101', 'resnet152', 'unet', 'vgg16', 'vgg19']
     base_size_list = [4,8,16,32]
     epoch_num = [100000,200000,300000,400000,500000,600000,700000,800000,900000,1000000]
     offline_job_list = []
     for i in range(0, num):
+        # random_ID = random.randint(1, 1000000)
         random_model = random.choice(job_list)
         random_batch = random.choice(base_size_list)
         random_epoch = random.choice(epoch_num)
@@ -274,7 +277,8 @@ def online_job_generator(num):
     job_list = ['alexnet', 'bert', 'deeplabv3', 'inception_v3', 'mobilenet_v2', 'resnet50', 'resnet101', 'resnet152', 'unet', 'vgg16', 'vgg19']
     base_size_list = [4,8,16,32]
 
-
+    
+    test =  I_sheduler()
     for i in range(0, num):
         qos = [40,50,60,70,80,90,100]
        
@@ -294,7 +298,7 @@ def online_job_generator(num):
 
 gpu_num = 32
 offline_jobs = offline_job_generator(200)
-online_jobs = online_job_generator(40)
+online_jobs = online_job_generator(36)
 
 test = simulator(GPU_num=gpu_num, algorithm='miso', online_jobs= copy.deepcopy(online_jobs), offline_jobs=copy.deepcopy(offline_jobs), num=len(offline_jobs))
 

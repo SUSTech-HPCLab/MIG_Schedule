@@ -167,7 +167,7 @@ class I_sheduler:
                 online_jobs.append(i)
             else:
                 offline_jobs.append(i)
-
+       
         online_config = []
 
         for i in online_jobs:
@@ -247,6 +247,8 @@ class I_sheduler:
                                     break
                            
                             if flag_valid:
+                             
+
                                 all_combinations2 = list(permutations(i, len(tmp)))
                                 tmp_config = []
                                 tmp_throught = 0
@@ -255,6 +257,7 @@ class I_sheduler:
                                    
                                     for k in combo2:
                                         config.append(config_map.get(k))
+                                 
                                     middle_throught =self.Calculated_throughput(config, tmp)
                                     tmp_dic = {}
                                     for k in range(0, len(tmp)):
@@ -263,8 +266,9 @@ class I_sheduler:
                                         tmp_throught = middle_throught
                                         tmp_config = tmp_dic
 
-                                   
                                 if throught + tmp_throught > best_obj:
+                                    if len(tmp) == 0 and len(config) == 0:
+                                        tmp_config = {}
                                     best_config = tmp_config
                                     best_obj = throught + tmp_throught
                                     best_concurrency = concurrency
@@ -290,6 +294,7 @@ class I_sheduler:
                         config = tmp_dic
                         if throught > best_obj:
                             best_config = config
+                            # print(best_config)
                             best_obj = throught
                             best_concurrency = concurrency
 
@@ -307,7 +312,7 @@ class I_sheduler:
             offline = best_concurrency.get(i)
  
             self.GPU_list[GPU_index][online_jobs.index(i)].append(offline)
-       
+
         for i in best_config.keys():
            
             self.GPU_list[GPU_index].append([i])
@@ -366,14 +371,31 @@ class I_sheduler:
         for i in self.GPU_list[GPU_index]:
             for j in i:
                 jobs.append(j)
+
         self.throughput[GPU_index] = self.partition_optimizer(jobs, GPU_index)
 
-        if not self.online_job_queue.empty() and self.I_cluster(self.online_job_queue.queue[0]):
+
+
+        flag = True
+        
+        if not self.online_job_queue.empty():
             online_job = self.online_job_queue.get()
-        else:
-            if not self.offline_job_queue.empty() and self.I_cluster(self.offline_job_queue.queue[0]):
-                offline_job = self.offline_job_queue.get()
+            result = self.I_cluster(online_job)
+            if result:
+                flag = False
                 
+        
+        if flag:
+            if not self.offline_job_queue.empty():
+                offline_job = self.offline_job_queue.get()
+                result = self.I_cluster(offline_job)
+               
+
+
+
+
+
+
                 
               
                 
@@ -384,6 +406,7 @@ class I_sheduler:
     def check_percentage(self, online_job, config_id):
         global online_job_list
         config = config_map.get(config_id)
+        # print(online_job.model_name, online_job.batch_Size, config_id)
         for i in online_job_list:
 
             if i.model_name == online_job.model_name and int(i.batch_Size)== int(online_job.batch_Size) and i.config == config:

@@ -46,10 +46,11 @@ class offline_job:
         self.progress = 0
         self.end_time = None
         self.speed = 0
+     
         
     
     def __str__(self):
-        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size} Start_time: {self.start_time}, End_time: {self.end_time} speed: {self.speed}"
+        return f"offline Model Name: {self.model_name} Batch Size: {self.batch_Size} Start_time: {self.start_time}, End_time: {self.end_time} speed: {self.speed} ID: {self.random}"
 
 
 class miso_sheduler:
@@ -217,12 +218,21 @@ class miso_sheduler:
         del self.config_list[GPU_index][index]
      
         self.throughput[GPU_index] =   self.miso_partition_optimizer(self.GPU_list[GPU_index], GPU_index)
-     
-        if not self.online_job_queue.empty() and self.miso_cluster(self.online_job_queue.queue[0]):
+
+        flag = True
+        if not self.online_job_queue.empty():
+
             online_job = self.online_job_queue.get()
-        else:
-            if not self.offline_job_queue.empty() and self.miso_cluster(self.offline_job_queue.queue[0]):
+            result = self.miso_cluster(online_job)
+            if result:
+                flag = False
+                
+        
+        if flag:
+            if not self.offline_job_queue.empty():
                 offline_job = self.offline_job_queue.get()
+                result = self.miso_cluster(offline_job)
+   
               
 
 
