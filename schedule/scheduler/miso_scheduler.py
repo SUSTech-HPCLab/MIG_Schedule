@@ -111,15 +111,17 @@ class miso_sheduler:
         
         if self.cluster_algorithm == 'number_of_resource':
             resource_list = []
-            for i in self.config_list:
+            for i in range(0, len(self.GPU_list)):
                 resource = 7
-                for j in i: 
-                    config_id = reverser_map.get(j)
-                    resource = resource - config_id
+                for j in range(0, len(self.GPU_list[i])):
+                    if isinstance(self.GPU_list[i][j], online_job):
+                        config_id = reverser_map.get(self.config_list[i][j])
+                        resource = resource - config_id
                 resource_list.append(resource)
             
             max_value = max(resource_list)
             max_index = resource_list.index(max_value) 
+            
             return max_index
         
         if self.cluster_algorithm == 'number_of_job_with_resource':
@@ -136,13 +138,14 @@ class miso_sheduler:
             for i in range(0, len(num_list)):
                 if min_value == num_list[i]:
                     GPUs.append(i)
-            
-            for i in GPUs:
-                num_resource_list = []
+
+            num_resource_list = []
+            for i in GPUs: 
                 resource = 7
-                for j in self.config_list[i]:
-                    config_id = reverser_map.get(j)
-                    resource = resource - config_id
+                for j in range(0, len(self.config_list[i])):
+                    if self.GPU_list[i][j]:
+                        config_id = reverser_map.get(self.config_list[i][j])
+                        resource = resource - config_id
 
                 num_resource_list.append(resource)
 
@@ -155,32 +158,29 @@ class miso_sheduler:
         if self.cluster_algorithm == 'number_of_resource_with_job':
             resource_list = []
        
-            for i in self.config_list:
+            for i in range(0, len(self.GPU_list)):
                 resource = 7
-                for j in i:
-                    config_id = reverser_map.get(j)
-                    resource = resource - config_id
+                for j in range(0, len(self.GPU_list[i])):
+                    if isinstance(self.GPU_list[i][j], online_job):
+                        config_id = reverser_map.get(self.config_list[i][j])
+                        resource = resource - config_id
                 resource_list.append(resource)
-            
             max_value = max(resource_list)
 
             GPUs = []
             for i in range(0, len(resource_list)):
                 if max_value == resource_list[i]:
                     GPUs.append(i)
-            
+            num_job_list = []
             for i in GPUs:
-                num_job_list = []
                 num = 0
                 for j in self.GPU_list[i]:
                     num = num + 1
                 num_job_list.append(num)
-
             min_value = min(num_job_list) 
             min_index = num_job_list.index(min_value) 
             min_index = GPUs[min_index]
-     
-         
+        
             return min_index
     
             
@@ -220,14 +220,14 @@ class miso_sheduler:
                         tmp.remove(j)
                 if valid:
                     valid_config.append(i.copy())
-
+    
         if len(valid_config) == 0:
             return False
 
         for i in valid_config:
             for j in online_config:
                 i.remove(j)
-
+    
         
         best_obj = 0
         best_config = None
@@ -242,14 +242,14 @@ class miso_sheduler:
                         config_list.append(best_config[offline_jobs.index(i)])
                 self.config_list[index] = config_list
                 return 0.0000001
-            
+          
             all_combinations = list(permutations(i, n))
-            
             for combo in all_combinations:
                 config = []
                
                 for z in combo:
                     config.append(config_map.get(z))
+              
                 throught =  self.Calculated_throughput(config, offline_jobs)
                 
                 if throught > best_obj:
@@ -257,12 +257,13 @@ class miso_sheduler:
                     best_obj = throught
                     
         config_list = []
-        
+      
         for i in jobs:
             if isinstance(i, online_job):
                 config_list.append(config_map.get(online_config[online_jobs.index(i)]))
             if isinstance(i, offline_job):
                 config_list.append(best_config[offline_jobs.index(i)])
+      
         self.config_list[index] = config_list
       
         return best_obj

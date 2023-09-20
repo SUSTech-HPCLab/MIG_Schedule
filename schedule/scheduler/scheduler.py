@@ -85,7 +85,7 @@ online_job_list = get_job_list()
 
 config_map = {7:"1c-7g-80gb", 4:"1c-4g-40gb", 3:"1c-3g-40gb", 2:"1c-2g-20gb", 1:"1c-1g-10gb"}
 
-reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":10}
+reverser_map = {"1c-7g-80gb" : 7, "1c-4g-40gb": 4, "1c-3g-40gb":3, "1c-2g-20gb":2, "1c-1g-10gb":1, "baseline":100}
 
 class I_sheduler:
     def __init__(self, GPU_list = [[]], max_job_per_GPU=7, cluster_algorithm='number_of_job'):
@@ -174,13 +174,18 @@ class I_sheduler:
             for i in range(0, len(num_list)):
                 if min_value == num_list[i]:
                     GPUs.append(i)
-            
-            for i in GPUs:
-                num_resource_list = []
+
+            num_resource_list = []
+            for i in GPUs:     
                 resource = 7
-                for j in self.config_list[i]:
-                    config_id = reverser_map.get(j)
-                    resource = resource - config_id
+                for j in range(0, len(self.GPU_list[i])):
+                    if len(self.GPU_list[i][j]) == 1:
+                        if isinstance(self.GPU_list[i][j][0], online_job):
+                            config_id = reverser_map.get(self.config_list[i][j])
+                            resource = resource - config_id 
+                        if len(self.GPU_list[i][j]) == 2:
+                            config_id = reverser_map.get(self.config_list[i][j])
+                            resource = resource - config_id 
 
                 num_resource_list.append(resource)
 
@@ -199,12 +204,18 @@ class I_sheduler:
 
         if self.cluster_algorithm == 'number_of_resource':
             resource_list = []
-       
-            for i in self.config_list:
+         
+
+            for i in range(0, len(self.GPU_list)):
                 resource = 7
-                for j in i:
-                    config_id = reverser_map.get(j)
-                    resource = resource - config_id
+                for j in range(0, len(self.GPU_list[i])):
+                    if len(self.GPU_list[i][j]) == 1:
+                        if isinstance(self.GPU_list[i][j][0], online_job):
+                            config_id = reverser_map.get(self.config_list[i][j])
+                            resource = resource - config_id 
+                    if len(self.GPU_list[i][j]) == 2:
+                        config_id = reverser_map.get(self.config_list[i][j])
+                        resource = resource - config_id 
                 resource_list.append(resource)
             
             max_value = max(resource_list)
@@ -219,11 +230,16 @@ class I_sheduler:
         if self.cluster_algorithm == 'number_of_resource_with_job':
             resource_list = []
        
-            for i in self.config_list:
+            for i in range(0, len(self.GPU_list)):
                 resource = 7
-                for j in i:
-                    config_id = reverser_map.get(j)
-                    resource = resource - config_id
+                for j in range(0, len(self.GPU_list[i])):
+                    if len(self.GPU_list[i][j]) == 1:
+                        if isinstance(self.GPU_list[i][j][0], online_job):
+                            config_id = reverser_map.get(self.config_list[i][j])
+                            resource = resource - config_id 
+                    if len(self.GPU_list[i][j]) == 2:
+                        config_id = reverser_map.get(self.config_list[i][j])
+                        resource = resource - config_id 
                 resource_list.append(resource)
             
             max_value = max(resource_list)
@@ -233,8 +249,8 @@ class I_sheduler:
                 if max_value == resource_list[i]:
                     GPUs.append(i)
             
+            num_job_list = []
             for i in GPUs:
-                num_job_list = []
                 num = 0
                 for j in self.GPU_list[i]:
                     for z in j:
@@ -250,6 +266,7 @@ class I_sheduler:
                 for j in i:
                     min_num = min_num + 1
          
+        
             return min_index, min_num
     
     
@@ -499,9 +516,10 @@ class I_sheduler:
 
     def check_percentage(self, online_job, config_id):
         global online_job_list
+   
         config = config_map.get(config_id)
+   
         for i in online_job_list:
-
             if i.model_name == online_job.model_name and int(i.batch_Size)== int(online_job.batch_Size) and i.config == config:
                 return float(i.tail)/float(online_job.qos)
         
@@ -547,7 +565,7 @@ class I_sheduler:
             if i[0] == offline_job.model_name and int(i[1]) == int(offline_job.batch_Size) and i[3] == online_job.model_name and \
                 int(i[4]) == int(online_job.batch_Size):
           
-               
+                
                 return base/float(i[2])
         
             

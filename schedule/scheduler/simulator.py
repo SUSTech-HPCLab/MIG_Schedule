@@ -12,7 +12,7 @@ from jobs.profile.standardized_throughput import get_job_list
 
 
 
-random.seed(61)
+random.seed(20)
 
 job_list = get_job_list()
 dir = '/home/zbw/MIG/MIG_Schedule/jobs/profile/result/'
@@ -70,10 +70,11 @@ class simulator:
             miso = miso_sheduler(GPU_list= GPU_list, cluster_algorithm=self.cluster_algorithm)
             for i in self.online_jobs:
                 miso.miso_cluster(i)
-            for j in self.offline_jobs:
-                if  miso.miso_cluster(j):
-                    j.start_time = 0 
-
+        
+            for i in self.offline_jobs:
+                if  miso.miso_cluster(i):
+                    i.start_time = 0 
+          
             for i in range(0, len(miso.GPU_list)):
                 jobs = miso.GPU_list[i]
                 configs = miso.config_list[i]
@@ -90,7 +91,7 @@ class simulator:
             num = 0
             job_list = []
             while True:
-                # print(num)
+               
                 num = num + 1
                 for i in range(0, len(miso.GPU_list)):
                     remove_jobs = []
@@ -132,6 +133,7 @@ class simulator:
                 scheduler.I_cluster(i)
 
             for j in self.offline_jobs:
+               
                 if scheduler.I_cluster(j):
                     j.start_time = 0 
             
@@ -158,7 +160,7 @@ class simulator:
 
             while True:
                 num = num + 1
-              
+
                 for i in range(0, len(scheduler.GPU_list)):
                  
                     remove_jobs = []
@@ -297,16 +299,16 @@ def online_job_generator(num):
 
 
 gpu_num = 36
-offline_jobs = offline_job_generator(100)
-online_jobs = online_job_generator(1)
+offline_jobs = offline_job_generator(200)
+online_jobs = online_job_generator(50)
 
-test = simulator(GPU_num=gpu_num, algorithm='miso', cluster_algorithm='number_of_resource_with_job', online_jobs=copy.deepcopy(online_jobs), offline_jobs=copy.deepcopy(offline_jobs), num=len(offline_jobs))
-
-
+test = simulator(GPU_num=gpu_num, algorithm='miso', cluster_algorithm='number_of_job_with_resource', online_jobs=copy.deepcopy(online_jobs), offline_jobs=copy.deepcopy(offline_jobs), num=len(offline_jobs))
 
 
 
 
-test2 = simulator(GPU_num=gpu_num, algorithm='miso', cluster_algorithm='number_of_job_with_resource', online_jobs= copy.deepcopy(online_jobs), offline_jobs=copy.deepcopy(offline_jobs), num=len(offline_jobs))
+
+
+test2 = simulator(GPU_num=gpu_num, algorithm='me', cluster_algorithm='number_of_job_with_resource', online_jobs= copy.deepcopy(online_jobs), offline_jobs=copy.deepcopy(offline_jobs), num=len(offline_jobs))
 
 
