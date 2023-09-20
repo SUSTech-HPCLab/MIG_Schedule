@@ -143,7 +143,7 @@ class miso_sheduler:
             for i in GPUs: 
                 resource = 7
                 for j in range(0, len(self.config_list[i])):
-                    if self.GPU_list[i][j]:
+                    if isinstance(self.GPU_list[i][j], online_job):
                         config_id = reverser_map.get(self.config_list[i][j])
                         resource = resource - config_id
 
